@@ -56,7 +56,7 @@ async def cancel_broadcast_callback(client, query):
 
 
 @app.on_message(filters.command("ycast") & filters.user(config.OWNER_ID) & filters.reply)
-@app.on_message(filters.regex(r"^(?i)Frieren Bcast$") & filters.user(config.OWNER_ID) & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Frieren Bcast$") & filters.user(config.OWNER_ID) & filters.reply)
 async def start_broadcast(client: Client, message: Message):
     global cancel_broadcast
     cancel_broadcast = False
@@ -107,4 +107,4 @@ async def start_broadcast(client: Client, message: Message):
 
 @app.on_callback_query(filters.regex("cancel_broadcast"))
 async def on_cancel_callback(client, query):
-    await cancel_broadcast_callback(client, query)
+    await cancel_broadcast_callback(client, query))
