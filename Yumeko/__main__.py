@@ -92,16 +92,16 @@ def get_main_menu_buttons():
     ]
     return InlineKeyboardMarkup(buttons)
 
-@app.on_message(filters.command("start" , config.COMMAND_PREFIXES) & filters.private)
+@app.on_message(filters.command("start", config.COMMAND_PREFIXES) & filters.private)
 @error
 @save
-async def start_cmd(_, message : Message):
-    
+async def start_cmd(_, message: Message):
+
     # Check for parameters passed with the start command
     if len(message.command) > 1 and message.command[1] == "help":
         await help_command(Client, message)
         return
-    
+
     x = await message.reply_text(f"`Hie {message.from_user.first_name} <3`")
     await sleep(0.3)
     await x.edit_text("🐾")
@@ -111,26 +111,27 @@ async def start_cmd(_, message : Message):
     await x.edit_text("🕊️")
     await sleep(0.8)
     await x.delete()
-    
-    await message.reply_cached_media(file_id = "CAACAgUAAxkBAAJuUGeBadZTdf_CjZY5sg_-DiHVwN6NAAI4FAACMBsIVIcDmYcfk1ruHgQ")    
-    
-    await sleep(0.2)
-    
+
     user_mention = message.from_user.mention(style="md")
     bot_mention = app.me.mention(style="md")
-    await message.reply(
-        f"**𝖧𝖾𝗒, {𝗎𝗌𝖾𝗋_𝗆𝖾𝗇𝗍𝗂𝗈𝗇} 🧸**\n"
-        f"**𝖨 𝖺𝗆 {𝖻𝗈𝗍_𝗆𝖾𝗇𝗍𝗂𝗈𝗇} ♡ , 𝗒𝗈𝗎𝗋 𝗏𝖾𝗋𝗌𝖺𝗍𝗂𝗅𝖾 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝖻𝗈𝗍, 𝖽𝖾𝗌𝗂𝗀𝗇𝖾𝖽 𝗍𝗈 𝗁𝖾𝗅𝗉 𝗒𝗈𝗎 𝗍𝖺𝗄𝖾 𝖼𝗈𝗇𝗍𝗋𝗈𝗅 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌 𝗐𝗂𝗍𝗁 𝖾𝖺𝗌𝖾 𝗎𝗌𝗂𝗇𝗀 𝗆𝗒 𝗉𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌!**\n\n"
-        f"[✨]({𝖼𝗈𝗇𝖿𝗂𝗀.𝖲𝖳𝖠𝖱𝖳_𝖨𝖬𝖦_𝖴𝖱𝖫}) **𝖶𝗁𝖺𝗍 𝖨 𝖢𝖺𝗇 𝖣𝗈:**\n"
-        f" • 𝖲𝖾𝖺𝗆𝗅𝖾𝗌𝗌 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌\n"
-        f" • 𝖯𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝖾𝗋𝖺𝗍𝗂𝗈𝗇 𝗍𝗈𝗈𝗅𝗌\n"
-        f" • 𝖥𝗎𝗇 𝖺𝗇𝖽 𝖾𝗇𝗀𝖺𝗀𝗂𝗇𝗀 𝖿𝖾𝖺𝗍𝗎𝗋𝖾𝗌\n\n"
-        f"📚 **𝖭𝖾𝖾𝖽 𝖧𝖾𝗅𝗉?**\n"
-        f"𝖢𝗅𝗂𝖼𝗄 𝗍𝗁𝖾 𝖧𝖾𝗅𝗉 𝖻𝗎𝗍𝗍𝗈𝗇 𝖻𝖾𝗅𝗈𝗐 𝗍𝗈 𝗀𝖾𝗍 𝖺𝗅𝗅 𝗍𝗁𝖾 𝖽𝖾𝗍𝖺𝗂𝗅𝗌 𝖺𝖻𝗈𝗎𝗍 𝗆𝗒 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌.",
-        reply_markup=get_main_menu_buttons(),
-        invert_media = True
-    )
 
+    await message.reply_photo(
+        photo="https://files.catbox.moe/0esyec.jpg",
+        caption=(
+            f"**𝖧𝖾𝗒, {user_mention} 🧸**\n"
+            f"**𝖨 𝖺𝗆 {bot_mention} ♡ , 𝗒𝗈𝗎𝗋 𝗏𝖾𝗋𝗌𝖺𝗍𝗂𝗅𝖾 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝖻𝗈𝗍, "
+            f"𝖽𝖾𝗌𝗂𝗀𝗇𝖾𝖽 𝗍𝗈 𝗁𝖾𝗅𝗉 𝗒𝗈𝗎 𝗍𝖺𝗄𝖾 𝖼𝗈𝗇𝗍𝗋𝗈𝗅 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌 "
+            f"𝗐𝗂𝗍𝗁 𝖾𝖺𝗌𝖾 𝗎𝗌𝗂𝗇𝗀 𝗆𝗒 𝗉𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌!**\n\n"
+            f"[✨]({𝖼𝗈𝗇𝖿𝗂𝗀.𝖲𝖳𝖠𝖱𝖳_𝖨𝖬𝖦_𝖴𝖱𝖫}) **𝖶𝗁𝖺𝗍 𝖨 𝖢𝖺𝗇 𝖣𝗈:**\n"
+            f" • 𝖲𝖾𝖺𝗆𝗅𝖾𝗌𝗌 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌\n"
+            f" • 𝖯𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝖾𝗋𝖺𝗍𝗂𝗈𝗇 𝗍𝗈𝗈𝗅𝗌\n"
+            f" • 𝖥𝗎𝗇 𝖺𝗇𝖽 𝖾𝗇𝗀𝖺𝗀𝗂𝗇𝗀 𝖿𝖾𝖺𝗍𝗎𝗋𝖾𝗌\n\n"
+            f"📚 **𝖭𝖾𝖾𝖽 𝖧𝖾𝗅𝗉?**\n"
+            f"𝖢𝗅𝗂𝖼𝗄 𝗍𝗁𝖾 𝖧𝖾𝗅𝗉 𝖻𝗎𝗍𝗍𝗈𝗇 𝖻𝖾𝗅𝗈𝗐 𝗍𝗈 𝗀𝖾𝗍 𝖺𝗅𝗅 𝗍𝗁𝖾 𝖽𝖾𝗍𝖺𝗂𝗅𝗌 "
+            f"𝖺𝖻𝗈𝗎𝗍 𝗆𝗒 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌."
+        ),
+        reply_markup=get_main_menu_buttons()
+    )
 
 @app.on_message(filters.command("help", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
@@ -220,11 +221,11 @@ async def handle_main_menu_callback(client, query: CallbackQuery):
         reply_markup=get_paginated_buttons(),
         invert_media=True
     )
-    
+
 @app.on_message(filters.command(["start" , "help"], prefixes=config.COMMAND_PREFIXES) & filters.group)
 async def start_command(client, message: Message):
     button = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Sᴛᴀʀᴛ ɪɴ ᴘᴍ", url="https://t.me/Frierenzbot?start=help")]
+        [InlineKeyboardButton("Sᴛᴀʀᴛ ɪɴ ᴘᴍ", url="https://t.me/YumekkoRoBot?start=help")]
     ])
     await message.reply(
         text=f"**𝖧𝖾𝗅𝗅𝗈, {message.from_user.first_name} <3**\n"
