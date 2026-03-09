@@ -1,6 +1,8 @@
 import os
 import subprocess
 import sys
+import asyncio
+from datetime import datetime
 from pyrogram import filters
 from Yumeko import app
 from config import config
@@ -19,30 +21,58 @@ async def git_pull_command(client, message):
     try:
         msg = await message.reply("🔄 **Checking for updates...**")
 
-        # Ensure git repo exists
+        # Ensure repo exists
         if not os.path.exists(".git"):
             subprocess.run(["git", "init"], check=True)
             subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
 
+        # Fetch latest commits
         subprocess.run(["git", "fetch", "origin"], check=True)
 
-        result = subprocess.run(
-            ["git", "pull", "origin", BRANCH],
+        # Get commit differences
+        commits = subprocess.run(
+            ["git", "log", f"HEAD..origin/{BRANCH}", "--pretty=format:%h|%an|%s|%ct"],
             capture_output=True,
             text=True
         )
 
-        output = (result.stdout + result.stderr).lower()
+        if not commits.stdout.strip():
+            return await msg.edit("✅ **Repository is already up to date.**")
 
-        if "already up to date" in output:
-            await msg.edit("✅ **Repository is already up to date.**")
-            return
+        updates = ""
+        repo_link = REPO_URL.replace(".git", "")
 
-        # Install requirements if updated
+        for i, line in enumerate(commits.stdout.splitlines(), start=1):
+            sha, author, summary, timestamp = line.split("|")
+            date = datetime.fromtimestamp(int(timestamp)).strftime("%d %b %Y")
+
+            updates += (
+                f"**➣ #{i}**: [{summary}]({repo_link}/commit/{sha})\n"
+                f"   👤 **Author:** {author}\n"
+                f"   📅 **Date:** {date}\n\n"
+            )
+
+        text = (
+            "**✨ New Update Available!**\n\n"
+            "**📜 Commits:**\n\n"
+            f"{updates}\n"
+            "⬇️ **Pulling updates now...**"
+        )
+
+        if len(text) > 4096:
+            text = text[:4000] + "\n\n... (too many commits)"
+
+        await msg.edit(text, disable_web_page_preview=True)
+
+        # Pull updates
+        subprocess.run(["git", "stash"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "pull", "origin", BRANCH], check=True)
+
+        # Install new requirements if changed
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
 
-        restart_message = await msg.edit(
-            "✅ **New update detected!**\n\n🔁 **Restarting Yumeko...**"
+        restart_message = await message.reply(
+            "✅ **Update successful!**\n\n🔁 **Restarting Yumeko...**"
         )
 
         save_restart_data(restart_message.chat.id, restart_message.id)
