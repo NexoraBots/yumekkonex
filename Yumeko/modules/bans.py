@@ -1,3 +1,4 @@
+import re
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message , CallbackQuery
 from Yumeko.decorator.chatadmin import can_restrict_members
@@ -29,7 +30,7 @@ def get_privileged_users():
 
 
 @app.on_message(filters.command(["ban" , "fuck"], prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)(Ban|Fuck) (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"^(Ban|Fuck) (him|her)$", re.IGNORECASE) & filters.group & filters.reply)
 @can_restrict_members
 @error
 @save
@@ -176,7 +177,7 @@ async def demote_user(client: app, callback_query: CallbackQuery): # type: ignor
 
 
 @app.on_message(filters.command("unban", prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Unban (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Unban (him|her)$") & filters.group & filters.reply)
 @can_restrict_members
 @error
 @save
@@ -638,7 +639,7 @@ async def temporary_ban_user(client: app, message: Message):  # type: ignore
 #====================================================================================================================================================#
 
 @app.on_message(filters.command(["mute"], prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Mute (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Mute (him|her)$") & filters.group & filters.reply)
 @can_restrict_members
 @error
 @save
@@ -741,7 +742,7 @@ async def mute_user(client: app, message: Message):  # type: ignore
         await message.reply(f"𝖴𝗇𝖺𝖻𝗅𝖾 𝗍𝗈 𝗆𝗎𝗍𝖾 𝗍𝗁𝖾 𝗎𝗌𝖾𝗋: {e}")
 
 @app.on_message(filters.command(["unmute"], prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Unmute (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Unmute (him|her)$") & filters.group & filters.reply)
 @can_restrict_members
 @error
 @save
@@ -1058,7 +1059,7 @@ async def temporary_mute_user(client: app, message: Message):  # type: ignore
 
 
 @app.on_message(filters.command(["kick"], prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Nikal Yaha Se$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Nikal Yaha Se$") & filters.group & filters.reply)
 @can_restrict_members
 @error
 @save
