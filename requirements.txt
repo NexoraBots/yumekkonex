@@ -1,3 +1,5 @@
+Flask==3.0.0
+gunicorn==21.2.0
 pyrofork
 uvloop
 motor
@@ -32,6 +34,12 @@ asyncio
 dnspython
 ffmpeg-python
 numpy
+youtube-search
+youtube-search-python
+pyjokes
+lyricsgenius
+Flask==3.0.0
+gunicorn==21.2.0
 youtube-search
 youtube-search-python
 pyjokes
