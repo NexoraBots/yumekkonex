@@ -107,4 +107,4 @@ async def start_broadcast(client: Client, message: Message):
 
 @app.on_callback_query(filters.regex("cancel_broadcast"))
 async def on_cancel_callback(client, query):
-    await cancel_broadcast_callback(client, query))
+    await cancel_broadcast_callback(client, query)
