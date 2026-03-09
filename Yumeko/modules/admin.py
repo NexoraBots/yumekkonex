@@ -63,7 +63,7 @@ async def update_all_admin_cache(client, message: Message):
         await message.reply(CHAT_ADMIN_REQUIRED)
 
 @app.on_message(filters.command("pin", prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Pin It$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Pin It$") & filters.group & filters.reply)
 @can_pin_messages
 @error
 @save
@@ -136,7 +136,7 @@ async def pin_message(client, message: Message):
 
 # Unpin a specific message
 @app.on_message(filters.command("unpin" , prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Unpin It$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Unpin It$") & filters.group & filters.reply)
 @can_pin_messages
 @error
 @save
@@ -365,7 +365,7 @@ async def spurge(c: app, m: Message): # type: ignore
 #==============================================================================================================================================#
 
 @app.on_message(filters.command(["promote" , "makeadmin"], prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Promote (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Promote (him|her)$") & filters.group & filters.reply)
 @can_promote_members
 @error
 @save
@@ -544,7 +544,7 @@ async def delete_promotion_message(client: app, callback_query: CallbackQuery): 
         await callback_query.answer(f"𝖥𝖺𝗂𝗅𝖾𝖽 𝗍𝗈 𝖽𝖾𝗅𝖾𝗍𝖾 𝗍𝗁𝖾 𝗆𝖾𝗌𝗌𝖺𝗀𝖾: {e}", show_alert=True)
 
 @app.on_message(filters.command("demote", prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Demote (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Demote (him|her)$") & filters.group & filters.reply)
 @can_promote_members
 @error
 @save
@@ -615,7 +615,7 @@ async def demote_user(client: app, message: Message):  # type: ignore
         await message.reply(f"𝖥𝖺𝗂𝗅𝖾𝖽 𝗍𝗈 𝖣𝖾𝗆𝗈𝗍𝖾 𝗍𝗁𝖾 𝗎𝗌𝖾𝗋: 𝖬𝖺𝗒𝖻𝖾 𝖳𝗁𝖾𝗒 𝖠𝗋𝖾 𝖭𝗈𝗍 𝖯𝗋𝗈𝗆𝗈𝗍𝖾𝖽 𝖡𝗒 𝖬𝖾")
 
 @app.on_message(filters.command("lowpromote", prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Lowpromote (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Lowpromote (him|her)$") & filters.group & filters.reply)
 @can_promote_members
 @error
 @save
@@ -736,7 +736,7 @@ async def promote_user(client: app, message: Message):  # type: ignore
 
 
 @app.on_message(filters.command("fullpromote", prefixes=c.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"^(?i)Fullpromote (him|her)$") & filters.group & filters.reply)
+@app.on_message(filters.regex(r"(?i)^Fullpromote (him|her)$") & filters.group & filters.reply)
 @can_promote_members
 @error
 @save
@@ -918,7 +918,7 @@ async def set_admin_title(client: app, message: Message):  # type: ignore
 #==============================================================================================================================================#
 
 @app.on_message(filters.command("adminlist") & filters.group)
-@app.on_message(filters.regex(r"^(?i)Yaha Ke Majdoor$") & filters.group)
+@app.on_message(filters.regex(r"(?i)^Yaha Ke Majdoor$") & filters.group)
 @chatadmin
 @error
 @save
