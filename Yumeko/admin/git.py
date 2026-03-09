@@ -13,19 +13,17 @@ BRANCH = "main"
 
 
 @app.on_message(filters.command("update", prefixes=config.COMMAND_PREFIXES) & filters.user(config.OWNER_ID))
-@app.on_message(filters.regex(r"(?i)^Yumeko Update$") & filters.user(config.OWNER_ID))
 @error
 @save
 async def git_pull_command(client, message):
     try:
-        await message.reply("🔄 **Checking for updates...**")
+        msg = await message.reply("🔄 **Checking for updates...**")
 
         # Ensure git repo exists
         if not os.path.exists(".git"):
             subprocess.run(["git", "init"], check=True)
             subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
 
-        # Fetch updates
         subprocess.run(["git", "fetch", "origin"], check=True)
 
         result = subprocess.run(
@@ -34,18 +32,21 @@ async def git_pull_command(client, message):
             text=True
         )
 
-        if "Already up to date" in result.stdout:
-            await message.reply("✅ **Repository is already up to date.**")
+        output = (result.stdout + result.stderr).lower()
+
+        if "already up to date" in output:
+            await msg.edit("✅ **Repository is already up to date.**")
             return
 
-        # Install new requirements if changed
+        # Install requirements if updated
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
 
-        restart_message = await message.reply(
-            "✅ **Update successful!**\n\n🔁 **Restarting Yumeko...**"
+        restart_message = await msg.edit(
+            "✅ **New update detected!**\n\n🔁 **Restarting Yumeko...**"
         )
 
         save_restart_data(restart_message.chat.id, restart_message.id)
+
         await restart_bot()
 
     except Exception as e:
@@ -54,7 +55,6 @@ async def git_pull_command(client, message):
 
 async def restart_bot():
     os.execvp(sys.executable, [sys.executable, "-m", "Yumeko"])
-
 
 @app.on_message(filters.command("restart", prefixes=config.COMMAND_PREFIXES) & filters.user(config.OWNER_ID))
 @error
