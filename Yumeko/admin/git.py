@@ -3,10 +3,14 @@ import subprocess
 import sys
 from pyrogram import filters
 from Yumeko import app
-from config import config 
+from config import config
 from Yumeko.helper.on_start import save_restart_data
 from Yumeko.decorator.errors import error
 from Yumeko.decorator.save import save
+
+REPO_URL = "https://github.com/NexoraBots/yumekkonex"
+BRANCH = "main"
+
 
 @app.on_message(filters.command("update", prefixes=config.COMMAND_PREFIXES) & filters.user(config.OWNER_ID))
 @app.on_message(filters.regex(r"(?i)^Yumeko Update$") & filters.user(config.OWNER_ID))
@@ -14,38 +18,51 @@ from Yumeko.decorator.save import save
 @save
 async def git_pull_command(client, message):
     try:
-        # Stash local changes to prevent merge conflicts
-        subprocess.run(["git", "stash"], check=True)
+        await message.reply("🔄 **Checking for updates...**")
+
+        # Ensure git repo exists
+        if not os.path.exists(".git"):
+            subprocess.run(["git", "init"], check=True)
+            subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
+
+        # Fetch updates
+        subprocess.run(["git", "fetch", "origin"], check=True)
 
         result = subprocess.run(
-            ["git", "pull", config.GIT_URL_WITH_TOKEN , "Frierenz"],
-            capture_output=True, text=True, check=True
+            ["git", "pull", "origin", BRANCH],
+            capture_output=True,
+            text=True
         )
+
         if "Already up to date" in result.stdout:
-            await message.reply("Rᴇᴘᴏ ɪs ᴀʟʀᴇᴀᴅʏ ᴜᴘ ᴛᴏ ᴅᴀᴛᴇ.")
-        elif result.returncode == 0:
-            restart_message = await message.reply("Gɪᴛ ᴘᴜʟʟ sᴜᴄᴄᴇssғᴜʟ. Bᴏᴛ ᴜᴘᴅᴀᴛᴇᴅ.\n\nRᴇsᴛᴀʀᴛɪɴɢ...")
-            save_restart_data(restart_message.chat.id, restart_message.id)
-            await restart_bot()
-        else:
-            await message.reply("Gɪᴛ ᴘᴜʟʟ ғᴀɪʟᴇᴅ. Pʟᴇᴀsᴇ ᴄʜᴇᴄᴋ ᴛʜᴇ ʟᴏɢs.")
-    except subprocess.CalledProcessError as e:
-        await message.reply(f"Gɪᴛ ᴘᴜʟʟ ғᴀɪʟᴇᴅ ᴡɪᴛʜ ᴇʀʀᴏʀ: {e.stderr}")
+            await message.reply("✅ **Repository is already up to date.**")
+            return
+
+        # Install new requirements if changed
+        subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+
+        restart_message = await message.reply(
+            "✅ **Update successful!**\n\n🔁 **Restarting Yumeko...**"
+        )
+
+        save_restart_data(restart_message.chat.id, restart_message.id)
+        await restart_bot()
+
+    except Exception as e:
+        await message.reply(f"❌ **Update failed:**\n`{str(e)}`")
+
 
 async def restart_bot():
-    args = [sys.executable, "-m", "Yumeko"]  # Adjust this line as needed
-    os.execle(sys.executable, *args, os.environ)
-    sys.exit()
+    os.execvp(sys.executable, [sys.executable, "-m", "Yumeko"])
 
-@app.on_message(filters.command("restart") & filters.user(config.OWNER_ID))
+
+@app.on_message(filters.command("restart", prefixes=config.COMMAND_PREFIXES) & filters.user(config.OWNER_ID))
 @error
 @save
 async def restart_command(client, message):
     try:
-        restart_message = await message.reply("**ᴏɴɪɪ-ᴄʜᴀɴ ʏᴜᴍᴇᴋᴏ ɪꜱ ʙᴇɪɴɢ ʀᴇꜱᴛᴀʀᴛᴇᴅ !!**")
+        restart_message = await message.reply("🔁 **Restarting Yumeko...**")
         save_restart_data(restart_message.chat.id, restart_message.id)
         os.execvp(sys.executable, [sys.executable, "-m", "Yumeko"])
     except Exception as e:
-        await message.reply(f"Rᴇsᴛᴀʀᴛ ғᴀɪʟᴇᴅ ᴡɪᴛʜ ᴇʀʀᴏʀ: {str(e)}")
-
-        
+        await message.reply(f"❌ Restart failed: `{str(e)}`")
