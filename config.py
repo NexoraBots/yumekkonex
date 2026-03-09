@@ -14,7 +14,7 @@ class config:
 
   #Git
   GIT_USERNAME = "NexoraBots"
-  GIT_URL_WITH_TOKEN = "https://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github.com/NexoraBots/Kamisako-akaya.git" 
+  GIT_URL_WITH_TOKEN = "https://github.com/NexoraBots/yumekkonex.git" 
 
   
   #Info
