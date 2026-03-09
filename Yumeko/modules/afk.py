@@ -81,6 +81,7 @@ async def afk_command(client: Client, message: Message):
     await message.reply(afk_message)
 
 
+from asyncio import sleep
 
 @app.on_message(filters.all & ~filters.me, group=AFK_REPLY_GROUP)
 @error
@@ -95,7 +96,7 @@ async def afk_mention_handler(client: Client, message: Message):
         if message.text:
             words = message.text.split()
             for word in words:
-                if word.startswith("@"):  # Username format
+                if word.startswith("@"):
                     username = word[1:]
                     afk_data = await get_afk_by_username(username)
                     if afk_data:
@@ -114,25 +115,40 @@ async def afk_mention_handler(client: Client, message: Message):
     elapsed_str = format_time_delta(elapsed)
 
     random_msg = random.choice(random_afk_reply_message)
+
+    sent_msg = None
+
     if afk_data.get("afk_reason") and afk_data.get("media_id"):
-        await client.send_cached_media(
+        sent_msg = await client.send_cached_media(
             chat_id=message.chat.id,
             file_id=afk_data["media_id"],
             caption=f"{afk_data['user_first_name']} {random_msg}.\n**𝖠𝖥𝖪 𝖿𝗈𝗋** : {elapsed_str}\n**𝖱𝖾𝖺𝗌𝗈𝗇** : {afk_data['afk_reason']}"
         )
+
     elif afk_data.get("media_id"):
-        await client.send_cached_media(
+        sent_msg = await client.send_cached_media(
             chat_id=message.chat.id,
             file_id=afk_data["media_id"],
             caption=f"{afk_data['user_first_name']} {random_msg}.\n**𝖠𝖥𝖪 𝖿𝗈𝗋** : {elapsed_str}"
         )
+
     elif afk_data.get("afk_reason"):
-        await message.reply(
+        sent_msg = await message.reply(
             f"{afk_data['user_first_name']} {random_msg}.\n**𝖠𝖥𝖪 𝖿𝗈𝗋** : {elapsed_str}\n**𝖱𝖾𝖺𝗌𝗈𝗇** : {afk_data['afk_reason']}"
         )
-    else:
-        await message.reply(f"{afk_data['user_first_name']} {random_msg}.\n**𝖠𝖥𝖪 𝖿𝗈𝗋** : {elapsed_str}")
 
+    else:
+        sent_msg = await message.reply(
+            f"{afk_data['user_first_name']} {random_msg}.\n**𝖠𝖥𝖪 𝖿𝗈𝗋** : {elapsed_str}"
+        )
+
+    # Auto delete after 15 seconds
+    if sent_msg:
+        await sleep(15)
+        try:
+            await sent_msg.delete()
+        except:
+            pass
 
 @app.on_message(filters.all & ~filters.me & ~filters.command(["afk" , "brb"] , prefixes=config.COMMAND_PREFIXES) & ~filters.regex(r"(?i)^off(\s+.+)?$")  & ~filters.regex(r"(?i)^brb(\s+.+)?$"), group=AFK_RETURN_GROUP)
 @error
