@@ -20,17 +20,14 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 # Set working directory
 WORKDIR /usr/src/app
 
-# Copy dependency file first (better docker caching)
-COPY requirements.txt .
+# Clone your GitHub repository (includes .git for updates)
+RUN git clone https://github.com/NexoraBots/yumekkonex 
 
-# Install python dependencies
+# Install Python dependencies
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the project
-COPY . .
-
-# Expose web port for gunicorn (if needed)
+# Expose web port
 EXPOSE 8000
 
-# Start bot + web server
+# Start web server + bot
 CMD bash -c "gunicorn app:app --bind 0.0.0.0:8000 --workers 2 & python3 -m Yumeko"
