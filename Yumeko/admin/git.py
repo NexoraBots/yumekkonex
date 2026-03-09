@@ -9,7 +9,7 @@ from Yumeko.decorator.errors import error
 from Yumeko.decorator.save import save
 
 @app.on_message(filters.command("update", prefixes=config.COMMAND_PREFIXES) & filters.user(config.OWNER_ID))
-@app.on_message(filters.regex(r"^(?i)Yumeko Update$") & filters.user(config.OWNER_ID))
+@app.on_message(filters.regex(r"(?i)^Yumeko Update$") & filters.user(config.OWNER_ID))
 @error
 @save
 async def git_pull_command(client, message):
@@ -47,4 +47,5 @@ async def restart_command(client, message):
         os.execvp(sys.executable, [sys.executable, "-m", "Yumeko"])
     except Exception as e:
         await message.reply(f"Rᴇsᴛᴀʀᴛ ғᴀɪʟᴇᴅ ᴡɪᴛʜ ᴇʀʀᴏʀ: {str(e)}")
+
         
