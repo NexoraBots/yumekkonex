@@ -1,6 +1,5 @@
-FROM python:3.10-slim-bookworm
+FROM python:3.11-slim-bookworm
 
-# Install required system libraries for opencv and other packages
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -14,11 +13,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-# Copy project files
 COPY . .
 
-# Upgrade pip and install python dependencies
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Start bot + web process
-CMD gunicorn app:app --bind 0.0.0.0:8000 & python3 -m Yumeko
+CMD bash -c "gunicorn app:app --bind 0.0.0.0:8000 & python3 -m Yumeko"
