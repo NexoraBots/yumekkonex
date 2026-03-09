@@ -11,7 +11,7 @@ async def snipe_message(client: Client, message: Message):
         args = message.text.split(maxsplit=2)
         
         if len(args) < 2:
-            await message.reply_text("Usage: `/snipe <chat_id> <text>` or reply to a message and use `/snipe <chat_id>`.", quote=True)
+            await message.reply_text("Usage: `/snipe <chat_id> <text>` or reply to a message and do `/snipe <chat_id>`.", quote=True)
             return
 
         chat_id = args[1]  
