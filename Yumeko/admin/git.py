@@ -11,7 +11,7 @@ from Yumeko.decorator.errors import error
 from Yumeko.decorator.save import save
 
 REPO_URL = "https://github.com/NexoraBots/yumekkonex"
-BRANCH = "main"
+BRANCH = "master"
 
 
 @app.on_message(filters.command("update", prefixes=config.COMMAND_PREFIXES) & filters.user(config.OWNER_ID))
