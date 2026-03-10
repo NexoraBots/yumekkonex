@@ -12,11 +12,6 @@ db = mongodb
 msgdb = db["chat_messages"]
 groupdb = db["group_stats"]
 
-
-# --------------------------------
-# MESSAGE COUNTER (AUTO TRIGGER)
-# --------------------------------
-
 @app.on_message(filters.group & filters.text & ~filters.bot)
 async def message_counter(client, message):
 
@@ -47,11 +42,6 @@ async def message_counter(client, message):
         {"$inc": {"messages": 1}},
         upsert=True
     )
-
-
-# --------------------------------
-# LEADERBOARD BUILDER
-# --------------------------------
 
 async def get_leaderboard(chat_id, mode="total"):
 
@@ -98,11 +88,6 @@ async def get_leaderboard(chat_id, mode="total"):
 
     return text
 
-
-# --------------------------------
-# /ranking
-# --------------------------------
-
 @app.on_message(filters.command("ranking", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
 @save
@@ -121,11 +106,6 @@ async def ranking(client, message):
     )
 
     await message.reply_text(text, reply_markup=buttons, disable_web_page_preview=True)
-
-
-# --------------------------------
-# BUTTON HANDLER
-# --------------------------------
 
 @app.on_callback_query(filters.regex("^rank_"))
 async def rank_buttons(client, query: CallbackQuery):
@@ -148,11 +128,6 @@ async def rank_buttons(client, query: CallbackQuery):
 
     await query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
-
-# --------------------------------
-# GROUP STATS
-# --------------------------------
-
 @app.on_message(filters.command("groupstats", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
 @save
@@ -173,11 +148,6 @@ async def groupstats(client, message):
     )
 
     await message.reply_text(text)
-
-
-# --------------------------------
-# DM GROUP RANKS
-# --------------------------------
 
 @app.on_message(filters.command("chatranks", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
@@ -206,11 +176,6 @@ async def chatranks(client, message):
         rank += 1
 
     await message.reply_text(text)
-
-
-# --------------------------------
-# MODULE INFO
-# --------------------------------
 
 __module__ = "𝖢𝗁𝖺𝗍 𝖱𝖺𝗇𝗄𝗌"
 
