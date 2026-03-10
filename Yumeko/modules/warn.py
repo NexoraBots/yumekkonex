@@ -1,21 +1,19 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from Yumeko.database import warn_db
-from Yumeko import app
-from Yumeko.helper.user import resolve_user , RESTRICT
-from Yumeko.decorator.chatadmin import can_restrict_members
-from pyrogram.enums import ParseMode
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ParseMode, ChatMemberStatus
 from pyrogram.errors import ChatAdminRequired
-from config import config
-from pyrogram.enums import ChatMemberStatus
-from Yumeko.decorator.save import save 
+
+from Yumeko import app
+from Yumeko.database import warn_db
+from Yumeko.decorator.chatadmin import can_restrict_members
 from Yumeko.decorator.errors import error
+from Yumeko.decorator.save import save
+from config import config
+
+RESTRICT = None
 
 
-MAX_WARNS = warn_db.MAX_WARNS
-
-
-@app.on_message(filters.command("warn" , prefixes=config.COMMAND_PREFIXES) & filters.group)
+@app.on_message(filters.command("warn", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @can_restrict_members
 @error
 @save
@@ -24,62 +22,65 @@ async def warn_user(client: Client, message: Message):
     try:
 
         if len(message.command) < 2 and not message.reply_to_message:
-            await message.reply(
-                "<b>𝖴𝗌𝖺𝗀𝖾:</b> 𝖱𝖾𝗉𝗅𝗒 𝗍𝗈 𝖺 𝗎𝗌𝖾𝗋 𝗈𝗋 𝗆𝖾𝗇𝗍𝗂𝗈𝗇 𝗍𝗁𝖾𝗆 𝗍𝗈 𝗂𝗌𝗌𝗎𝖾 𝖺 𝗐𝖺𝗋𝗇𝗂𝗇𝗀.\n"
-                "<b>𝖤𝗑𝖺𝗆𝗉𝗅𝖾:</b> <code>/𝗐𝖺𝗋𝗇 @𝗎𝗌𝖾𝗋 𝖲𝗉𝖺𝗆𝗆𝗂𝗇𝗀</code>",
+            return await message.reply(
+                "<b>Usage:</b> Reply or /warn user reason",
                 parse_mode=ParseMode.HTML
             )
-            return
-    
-        reason = " ".join(message.command[2:]) if len(message.command) > 2 else "𝖭𝗈 𝗋𝖾𝖺𝗌𝗈𝗇 𝗉𝗋𝗈𝗏𝗂𝖽𝖾𝖽."
+
+        reason = " ".join(message.command[2:]) if len(message.command) > 2 else "No reason provided."
+
         target_user = await resolve_user(client, message)
-    
+
         if not target_user:
-            await message.reply("<b>𝖤𝗋𝗋𝗈𝗋:</b> 𝖴𝗇𝖺𝖻𝗅𝖾 𝗍𝗈 𝗂𝖽𝖾𝗇𝗍𝗂𝖿𝗒 𝗍𝗁𝖾 𝗎𝗌𝖾𝗋.", parse_mode=ParseMode.HTML)
-            return
+            return await message.reply(
+                "<b>Error:</b> Unable to identify the user.",
+                parse_mode=ParseMode.HTML
+            )
 
         x = await app.get_chat_member(message.chat.id, target_user.id)
-    
+
         if x.status == ChatMemberStatus.OWNER:
-            await message.reply("𝖧𝗈𝗐 𝖢𝖺𝗇 𝖨 Warn 𝖳𝗁𝖾 𝖮𝗐𝗇𝖾𝗋?")
-            return
-    
+            return await message.reply("You can't warn the owner.")
+
         if x.status == ChatMemberStatus.ADMINISTRATOR:
-            await message.reply("𝖴𝗌𝖾𝗋 𝖨𝗌 𝖠𝖽𝗆𝗂𝗇!")
-            return
-    
+            return await message.reply("User is admin.")
+
         warn_count = await warn_db.add_warn(message.chat.id, target_user.id, reason, client)
+
+        MAX_WARNS = await warn_db.get_warn_limit(message.chat.id)
+
         user_mention = target_user.mention
-    
+
         if warn_count >= MAX_WARNS:
             await message.reply(
-                f"**𝖴𝗌𝖾𝗋 𝖡𝖺𝗇𝗇𝖾𝖽:** {user_mention}\n"
-                f"**𝖱𝖾𝖺𝗌𝗈𝗇:** {reason}\n"
-                f"**𝖶𝖺𝗋𝗇𝗂𝗇𝗀𝗌 𝖤𝗑𝖼𝖾𝖾𝖽𝖾𝖽:** {MAX_WARNS}"
+                f"**User Banned:** {user_mention}\n"
+                f"**Reason:** {reason}\n"
+                f"**Warn Limit Reached:** {MAX_WARNS}"
             )
             return
-    
+
         keyboard = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("- 1", callback_data=f"warn_decrease_{target_user.id}"),
-                InlineKeyboardButton("+ 1", callback_data=f"warn_increase_{target_user.id}")
+                InlineKeyboardButton("-1", callback_data=f"warn_decrease_{target_user.id}"),
+                InlineKeyboardButton("+1", callback_data=f"warn_increase_{target_user.id}")
             ],
-            [InlineKeyboardButton("𝖢𝗅𝖾𝖺𝗋 𝖠𝗅𝗅 𝖶𝖺𝗋𝗇𝗂𝗇𝗀𝗌", callback_data=f"warn_delete_{target_user.id}")],
-            [InlineKeyboardButton("🗑️", callback_data="delete")]
+            [
+                InlineKeyboardButton("Clear Warns", callback_data=f"warn_delete_{target_user.id}")
+            ],
+            [
+                InlineKeyboardButton("🗑", callback_data="delete")
+            ]
         ])
-    
+
         await message.reply(
-            f"**𝖶𝖺𝗋𝗇𝗂𝗇𝗀 𝖨𝗌𝗌𝗎𝖾𝖽:** {user_mention}\n"
-            f"**𝖱𝖾𝖺𝗌𝗈𝗇:** {reason}\n"
-            f"**𝖢𝗎𝗋𝗋𝖾𝗇𝗍 𝖶𝖺𝗋𝗇𝗂𝗇𝗀𝗌:** {warn_count} / {MAX_WARNS}",
+            f"**Warning Issued:** {user_mention}\n"
+            f"**Reason:** {reason}\n"
+            f"**Current Warns:** {warn_count}/{MAX_WARNS}",
             reply_markup=keyboard
         )
 
-        await app.restrict_chat_member(message.chat.id , target_user.id , permissions=RESTRICT)
-
     except ChatAdminRequired:
-        await message.reply_text("Chat ADMIN REQUIRED")
-
+        await message.reply("I need admin rights.")
 
 @app.on_message(filters.command("setwarnlimit", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @can_restrict_members
@@ -88,10 +89,7 @@ async def warn_user(client: Client, message: Message):
 async def set_warn_limit(client: Client, message: Message):
 
     if len(message.command) < 2:
-        return await message.reply(
-            "<b>𝖴𝗌𝖺𝗀𝖾:</b> /𝗌𝖾𝗍𝗐𝖺𝗋𝗇𝗅𝗂𝗆𝗂𝗍 <number>",
-            parse_mode=ParseMode.HTML
-        )
+        return await message.reply("Usage: /setwarnlimit 3")
 
     try:
         limit = int(message.command[1])
@@ -99,42 +97,30 @@ async def set_warn_limit(client: Client, message: Message):
         await warn_db.set_warn_limit(message.chat.id, limit)
 
         await message.reply(
-            f"<b>𝖶𝖺𝗋𝗇 𝖫𝗂𝗆𝗂𝗍 𝖴𝗉𝖽𝖺𝗍𝖾𝖽</b>\n"
-            f"<b>𝖭𝖾𝗐 𝖫𝗂𝗆𝗂𝗍:</b> {limit}",
-            parse_mode=ParseMode.HTML
+            f"Warn limit updated.\nNew limit: {limit}"
         )
 
     except ValueError:
-        await message.reply("𝖨𝗇𝗏𝖺𝗅𝗂𝖽 𝗇𝗎𝗆𝖻𝖾𝗋.")
-
-
+        await message.reply("Invalid number.")
+        
 @app.on_message(filters.command("resetwarns", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @can_restrict_members
 @error
 @save
 async def reset_warns(client: Client, message: Message):
 
-    if len(message.command) < 2 and not message.reply_to_message:
-        return await message.reply(
-            "<b>𝖴𝗌𝖺𝗀𝖾:</b> 𝖱𝖾𝗉𝗅𝗒 𝗈𝗋 /𝗋𝖾𝗌𝖾𝗍𝗐𝖺𝗋𝗇𝗌 <user>",
-            parse_mode=ParseMode.HTML
-        )
-
     target_user = await resolve_user(client, message)
 
     if not target_user:
-        return await message.reply("<b>𝖴𝗌𝖾𝗋 𝗇𝗈𝗍 𝖿𝗈𝗎𝗇𝖽.</b>", parse_mode=ParseMode.HTML)
+        return await message.reply("User not found.")
 
     await warn_db.clear_warns(message.chat.id, target_user.id)
 
     await message.reply(
-        f"<b>𝖠𝗅𝗅 𝖶𝖺𝗋𝗇𝗂𝗇𝗀𝗌 𝖱𝖾𝗌𝖾𝗍</b>\n"
-        f"<b>𝖴𝗌𝖾𝗋:</b> {target_user.mention}",
-        parse_mode=ParseMode.HTML
+        f"All warnings reset for {target_user.mention}"
     )
-
-
-@app.on_message(filters.command("unwarn" , prefixes=config.COMMAND_PREFIXES) & filters.group)
+    
+@app.on_message(filters.command("unwarn", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @can_restrict_members
 @error
 @save
@@ -145,23 +131,21 @@ async def unwarn_user(client: Client, message: Message):
         target_user = await resolve_user(client, message)
 
         if not target_user:
-            return await message.reply("<b>𝖴𝗌𝖾𝗋 𝗇𝗈𝗍 𝖿𝗈𝗎𝗇𝖽.</b>", parse_mode=ParseMode.HTML)
+            return await message.reply("User not found.")
 
         warn_count = await warn_db.remove_warn(message.chat.id, target_user.id)
 
         if warn_count == 0:
-            await message.reply(
-                f"**𝖭𝗈 𝗐𝖺𝗋𝗇𝗂𝗇𝗀𝗌 𝗍𝗈 𝗋𝖾𝗆𝗈𝗏𝖾 𝖿𝗈𝗋:** {target_user.mention}"
+            return await message.reply(
+                f"No warnings left for {target_user.mention}"
             )
-            return
-    
+
         await message.reply(
-            f"**𝖶𝖺𝗋𝗇𝗂𝗇𝗀 𝗋𝖾𝗆𝗈𝗏𝖾𝖽:** {target_user.mention}\n"
-            f"**𝖱𝖾𝗆𝖺𝗂𝗇𝗂𝗇𝗀:** {warn_count}"
+            f"Warning removed for {target_user.mention}\nRemaining: {warn_count}"
         )
 
     except ChatAdminRequired:
-        await message.reply_text("Chat ADMIN REQUIRED")
+        await message.reply("Admin rights required.")
 
 
 __module__ = "𝖶𝖺𝗋𝗇"
