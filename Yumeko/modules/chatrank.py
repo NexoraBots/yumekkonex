@@ -148,13 +148,12 @@ async def groupstats(client, message):
     # Count admins
     admin_count = 0
     async for _ in client.get_chat_members(
-            chat.id,
-            filter=ChatMembersFilter.ADMINISTRATORS,
-            limit=200
-        ):
+        chat.id,
+        filter=ChatMembersFilter.ADMINISTRATORS
+    ):
         admin_count += 1
 
-
+    # Get leaderboard groups
     groups_total = await get_top_groups("total")
     groups_today = await get_top_groups("today")
     groups_week = await get_top_groups("week")
@@ -179,21 +178,26 @@ async def groupstats(client, message):
             break
 
     text = (
-        "**Group Statistics**\n\n"
-        f"Name ⋟ {chat.title}\n"
-        f"Chat ID ⋟ `{chat.id}`\n"
-        f"Members ⋟ {members:,}\n"
-        f"Admins ⋟ {admin_count}\n"
-        f"Total Messages ⋟ {msgs:,}\n"
-        f"Chat Type ⋟ {chat.type}\n\n"
-        f"Group Rank\n"
-        f"Overall ⋟ #{overall_rank}\n"
-        f"Today ⋟ #{today_rank}\n"
-        f"Weekly ⋟ #{week_rank}"
+        "**📊 Group Statistics**\n\n"
+        f"**Name ⋟** {chat.title}\n"
+        f"**Chat ID ⋟** `{chat.id}`\n"
+        f"**Members ⋟** {members:,}\n"
+        f"**Admins ⋟** {admin_count}\n"
+        f"**Total Messages ⋟** {msgs:,}\n"
+        f"**Chat Type ⋟** {chat.type}\n\n"
+        "**🏆 Group Rank**\n"
+        f"**Overall ⋟** #{overall_rank}\n"
+        f"**Today ⋟** #{today_rank}\n"
+        f"**Weekly ⋟** #{week_rank}"
     )
 
-    await message.reply_text(text, disable_web_page_preview=True)
+    await message.reply_text(
+        text,
+        disable_web_page_preview=True
+    )
+
 # Global chat ranks
+
 @app.on_message(filters.command("chatranks", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
 @save
