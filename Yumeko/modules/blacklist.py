@@ -212,6 +212,7 @@ async def blacklist_handler(client: Client, message: Message):
         await take_action(client, message, blacklist_mode)
         return
 
+from Yumeko.database.warn_db import add_warn, get_warn_limit
 
 async def take_action(client: Client, message: Message, blacklist_mode: dict):
     try:
@@ -219,66 +220,141 @@ async def take_action(client: Client, message: Message, blacklist_mode: dict):
         duration = int(blacklist_mode.get("duration", 0))
         d = "Permanent" if duration == 0 else duration
 
-        log_message = None  # Initialize log_message
+        log_message = None
 
         if mode == "off":
             return
 
         elif mode == "del":
-            log_message = await format_log("Deleted Blacklisted Content", message.chat.title, admin=message.from_user.mention)
+            log_message = await format_log(
+                "Deleted Blacklisted Content",
+                message.chat.title,
+                admin=message.from_user.mention
+            )
             await send_log(message.chat.id, log_message)
             return
 
         elif mode == "warn":
-            warn_count = await add_warn(message.chat.id, message.from_user.id, "Blacklisted content", client)
-            warn_count = warn_count or 1  # Ensure it's not None
-            await message.reply(f"{message.from_user.mention}, you've been warned. Current warnings: {warn_count}/{MAX_WARNS}.")
-            log_message = await format_log("Warned User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
+
+            warn_count = await add_warn(
+                message.chat.id,
+                message.from_user.id,
+                "Blacklisted content",
+                client
+            )
+
+            warn_limit = await get_warn_limit(message.chat.id)
+
+            warn_count = warn_count or 1
+
+            await message.reply(
+                f"{message.from_user.mention}, you've been warned.\n"
+                f"Warnings: {warn_count}/{warn_limit}"
+            )
+
+            log_message = await format_log(
+                "Warned User",
+                message.chat.title,
+                admin=message.from_user.mention,
+                user=message.from_user.mention
+            )
 
         elif mode == "ban":
             await client.ban_chat_member(message.chat.id, message.from_user.id)
-            await message.reply(f"{message.from_user.mention} has been banned for using blacklisted content.")
-            log_message = await format_log("Banned User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
+
+            await message.reply(
+                f"{message.from_user.mention} has been banned for using blacklisted content."
+            )
+
+            log_message = await format_log(
+                "Banned User",
+                message.chat.title,
+                admin=message.from_user.mention,
+                user=message.from_user.mention
+            )
 
         elif mode == "kick":
             await client.ban_chat_member(message.chat.id, message.from_user.id)
             await client.unban_chat_member(message.chat.id, message.from_user.id)
-            await message.reply(f"{message.from_user.mention} has been kicked for using blacklisted content.")
-            log_message = await format_log("Kicked User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
+
+            await message.reply(
+                f"{message.from_user.mention} has been kicked for using blacklisted content."
+            )
+
+            log_message = await format_log(
+                "Kicked User",
+                message.chat.title,
+                admin=message.from_user.mention,
+                user=message.from_user.mention
+            )
 
         elif mode == "mute":
             await client.restrict_chat_member(
                 message.chat.id,
                 message.from_user.id,
-                permissions=types.ChatPermissions(),
+                permissions=types.ChatPermissions()
             )
-            await message.reply(f"{message.from_user.mention} has been muted for using blacklisted content.")
-            log_message = await format_log("Muted User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
+
+            await message.reply(
+                f"{message.from_user.mention} has been muted for using blacklisted content."
+            )
+
+            log_message = await format_log(
+                "Muted User",
+                message.chat.title,
+                admin=message.from_user.mention,
+                user=message.from_user.mention
+            )
 
         elif mode == "tban":
             until_date = int(time.time()) + duration
-            await client.ban_chat_member(message.chat.id, message.from_user.id, until_date=until_date)
-            await message.reply(f"{message.from_user.mention} has been temporarily banned for {d} seconds for using blacklisted content.")
-            log_message = await format_log("Temporarily Banned User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
+
+            await client.ban_chat_member(
+                message.chat.id,
+                message.from_user.id,
+                until_date=until_date
+            )
+
+            await message.reply(
+                f"{message.from_user.mention} has been temporarily banned for {d} seconds."
+            )
+
+            log_message = await format_log(
+                "Temporarily Banned User",
+                message.chat.title,
+                admin=message.from_user.mention,
+                user=message.from_user.mention
+            )
 
         elif mode == "tmute":
             until_date = int(time.time()) + duration
+
             await client.restrict_chat_member(
                 message.chat.id,
                 message.from_user.id,
                 permissions=types.ChatPermissions(),
-                until_date=until_date,
+                until_date=until_date
             )
-            await message.reply(f"{message.from_user.mention} has been temporarily muted for {d} seconds for using blacklisted content.")
-            log_message = await format_log("Temporarily Muted User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
+
+            await message.reply(
+                f"{message.from_user.mention} has been temporarily muted for {d} seconds."
+            )
+
+            log_message = await format_log(
+                "Temporarily Muted User",
+                message.chat.title,
+                admin=message.from_user.mention,
+                user=message.from_user.mention
+            )
 
         if log_message:
             await send_log(message.chat.id, log_message)
 
     except ChatAdminRequired:
         return
+
     except Exception as e:
-        print(f"Error in take_action: {e}")
+        print(f"Blacklist Action Error: {e}")
 
 __module__ = "𝖡𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍"
 
