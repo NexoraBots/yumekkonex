@@ -1846,7 +1846,7 @@ async def get_latest_anime_news():
     return {"title": title, "post_url": f"{url}{post_url}", "image": pic, "info": synopsis}
 
 
-@app.on_message(filters.command("𝖺𝗇𝗂𝗆𝖾𝗇𝖾𝗐𝗌", prefixes=config.COMMAND_PREFIXES))
+@app.on_message(filters.command("animenews", prefixes=config.COMMAND_PREFIXES))
 @error
 @save
 async def anime_news(client: Client, message: Message):
