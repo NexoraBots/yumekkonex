@@ -3,7 +3,9 @@ from pyrogram.errors import ChatAdminRequired
 from Yumeko.database import warnings_collection
 from Yumeko import app
 
-DEFAULT_WARNS = 3  # default warn limit
+# Default warn limit
+MAX_WARNS = 3
+DEFAULT_WARNS = MAX_WARNS
 
 
 async def set_warn_limit(chat_id: int, limit: int):
@@ -22,9 +24,11 @@ async def get_warn_limit(chat_id: int):
     Get warn limit for a specific chat.
     """
     data = await warnings_collection.find_one({"chat_id": chat_id, "type": "settings"})
+
     if not data:
-        return DEFAULT_WARNS
-    return data.get("warn_limit", DEFAULT_WARNS)
+        return MAX_WARNS
+
+    return data.get("warn_limit", MAX_WARNS)
 
 
 async def add_warn(chat_id: int, user_id: int, reason: str, client: Client):
