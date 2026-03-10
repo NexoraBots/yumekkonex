@@ -14,7 +14,7 @@ time_format = "%Y-%m-%d %H:%M:%S"
 
 OWNER_ID = 8585494095
 SPECIAL_FEMALE_ID = 8547271326
-SPECIAL_FEMALE_NAME = "𝘔𝘢𝘱𝘭𝘦<3"
+SPECIAL_FEMALE_NAME = "Swarika 🍀"
 
 IMAGE_URLS = [
     "https://files.catbox.moe/5zsvmu.jpg",
