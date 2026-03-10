@@ -4,29 +4,83 @@ from pyrogram.types import CallbackQuery, ChatJoinRequest
 from pyrogram.types import InlineKeyboardButton as ikb
 from pyrogram.types import InlineKeyboardMarkup as ikm
 from Yumeko import app , JOIN_UPDATE_GROUP
+from Yumeko.database.joinreq_db import (
+    enable_joinreq,
+    disable_joinreq,
+    is_joinreq_enabled
+)
+from config import config
+
+
+@app.on_message(filters.command("request", prefixes=config.COMMAND_PREFIXES) & filters.group)
+async def request_toggle(client: Client, message: Message):
+
+    if len(message.command) < 2:
+        return await message.reply_text(
+            "𝖴𝗌𝖺𝗀𝖾:\n"
+            "/request enable\n"
+            "/request disable"
+        )
+
+    chat_id = message.chat.id
+    option = message.command[1].lower()
+
+    member = await message.chat.get_member(message.from_user.id)
+
+    if member.status not in [CMS.ADMINISTRATOR, CMS.OWNER]:
+        return await message.reply_text(
+            "𝖮𝗇𝗅𝗒 𝖺𝖽𝗆𝗂𝗇𝗌 𝖼𝖺𝗇 𝗎𝗌𝖾 𝗍𝗁𝗂𝗌 𝖼𝗈𝗆𝗆𝖺𝗇𝖽."
+        )
+
+    if option == "enable":
+        await enable_joinreq(chat_id)
+        await message.reply_text(
+            "𝖩𝗈𝗂𝗇 𝗋𝖾𝗊𝗎𝖾𝗌𝗍 𝗆𝖺𝗇𝖺𝗀𝖾𝗋 𝖾𝗇𝖺𝖻𝗅𝖾𝖽."
+        )
+
+    elif option == "disable":
+        await disable_joinreq(chat_id)
+        await message.reply_text(
+            "𝖩𝗈𝗂𝗇 𝗋𝖾𝗊𝗎𝖾𝗌𝗍 𝗆𝖺𝗇𝖺𝗀𝖾𝗋 𝖽𝗂𝗌𝖺𝖻𝗅𝖾𝖽."
+        )
+
+    else:
+        await message.reply_text(
+            "𝖴𝗌𝖾: enable / disable"
+        )
 
 
 @app.on_chat_join_request(group=JOIN_UPDATE_GROUP)
 async def join_request_handler(c: Client, j: ChatJoinRequest):
-    user = j.from_user.id
-    userr = j.from_user
+
     chat = j.chat.id
 
-    txt = "New join request is available\n**USER's INFO**\n"
-    txt += f"Name: {userr.full_name}\n"
-    txt += f"Mention: {userr.mention}\n"
-    txt += f"Id: {user}\n"
-    txt += f"Scam: {'True' if userr.is_scam else 'False'}\n"
+    if not await is_joinreq_enabled(chat):
+        return
+
+    user = j.from_user.id
+    userr = j.from_user
+
+    txt = (
+        "𝖭𝖾𝗐 𝗃𝗈𝗂𝗇 𝗋𝖾𝗊𝗎𝖾𝗌𝗍\n\n"
+        "**𝖴𝗌𝖾𝗋 𝖨𝗇𝖿𝗈**\n"
+        f"𝖭𝖺𝗆𝖾: {userr.full_name}\n"
+        f"𝖬𝖾𝗇𝗍𝗂𝗈𝗇: {userr.mention}\n"
+        f"𝖨𝖣: `{user}`\n"
+        f"𝖲𝖼𝖺𝗆: {'True' if userr.is_scam else 'False'}\n"
+    )
+
     if userr.username:
-        txt += f"Username: @{userr.username}\n"
+        txt += f"𝖴𝗌𝖾𝗋𝗇𝖺𝗆𝖾: @{userr.username}\n"
+
     kb = [
         [
-            ikb("Accept", f"accept_joinreq_uest_{user}"),
-            ikb("Decline", f"decline_joinreq_uest_{user}")
+            ikb("Accept", f"accept_joinreq_{user}"),
+            ikb("Decline", f"decline_joinreq_{user}")
         ]
     ]
+
     await c.send_message(chat, txt, reply_markup=ikm(kb))
-    return
 
 
 @app.on_callback_query(filters.regex("^accept_joinreq_uest_") | filters.regex("^decline_joinreq_uest_"))
