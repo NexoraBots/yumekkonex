@@ -1823,31 +1823,32 @@ Selected text case in this group: {cs}"""
 
 
 
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from Yumeko import app
-from config import config
-from Yumeko.decorator.save import save
-from Yumeko.decorator.errors import error
-import aiohttp
+from bs4 import BeautifulSoup
 
-# URL of your Flask news API
-ANIME_NEWS_API = "https://yumekkonex.onrender.com"  # Replace with deployed URL if not local
+async def get_latest_anime_news():
+    url = 'https://animenewsnetwork.com'
+    res = requests.get(url).text
+    soup = BeautifulSoup(res, "html.parser")
 
-async def fetch_anime_news():
-    async with aiohttp.ClientSession() as session:
-        async with session.get(ANIME_NEWS_API) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-                # Flask API returns single news item as {"title": ..., "post_url": ..., "image": ..., "info": ...}
-                return data
-            return None
+    news_card = soup.find("div", class_="herald box news")
+    if not news_card:
+        return None
 
-@app.on_message(filters.command("animenews", prefixes=config.COMMAND_PREFIXES))
+    src = news_card.find("div", class_="thumbnail lazyload")['data-src']
+    pic = f"{url}{src}"
+
+    synopsis = news_card.find("div", class_="preview").text
+    title = news_card.find("h3").text.strip()
+    post_url = news_card.find("h3").find("a")['href']
+
+    return {"title": title, "post_url": f"{url}{post_url}", "image": pic, "info": synopsis}
+
+
+@app.on_message(filters.command("𝖺𝗇𝗂𝗆𝖾𝗇𝖾𝗐𝗌", prefixes=config.COMMAND_PREFIXES))
 @error
 @save
 async def anime_news(client: Client, message: Message):
-    news_item = await fetch_anime_news()
+    news_item = await get_latest_anime_news()
     if not news_item:
         await message.reply_text("𝖭𝗈 𝗇𝖾𝗐𝗌 𝖺𝗏𝖺𝗂𝗅𝖺𝖻𝗅𝖾 𝗋𝗂𝗀𝗁𝗍 𝗇𝗈𝗐.")
         return
