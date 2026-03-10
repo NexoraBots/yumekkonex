@@ -31,7 +31,12 @@ class config:
   CMD_STARTERS = "/.!&#%$"
   STATS_IMG_URL = "https://files.catbox.moe/d69tm0.jpg"
   START_IMG_URL = "https://files.catbox.moe/wybrme.jpg"
-  HELP_IMG_URL = "https://files.catbox.moe/j3tdbi.jpg"
+  HELP_IMG_URL = [
+    "https://files.catbox.moe/j3tdbi.jpg",
+    "https://files.catbox.moe/0esyec.jpg",
+    "https://files.catbox.moe/w4t9cj.jpg",
+    "https://files.catbox.moe/d69tm0.jpg"
+  ]
   ALIVE_IMG_URL = "https://files.catbox.moe/w4t9cj.jpg"
 
 
