@@ -25,21 +25,27 @@ async def git_check_updates(client, message):
 
     try:
 
+        # Initialize git repo if missing
         if not os.path.exists(".git"):
-            subprocess.run(["git", "init"], check=True)
+            subprocess.run(["git", "init", "-b", BRANCH], check=True)
             subprocess.run(["git", "remote", "add", "origin", REPO_URL], check=True)
 
+        # Fetch remote updates
         subprocess.run(["git", "fetch", "origin"], check=True)
 
+        # Check how many commits behind
         check_updates = subprocess.run(
             ["git", "rev-list", f"HEAD..origin/{BRANCH}", "--count"],
             capture_output=True,
             text=True
         )
 
-        if check_updates.stdout.strip() == "0":
+        commit_count = check_updates.stdout.strip()
+
+        if commit_count == "0":
             return await msg.edit("✅ **Repository is already up to date.**")
 
+        # Get commit details
         commits = subprocess.run(
             ["git", "log", f"HEAD..origin/{BRANCH}", "--pretty=format:%h|%an|%s|%ct"],
             capture_output=True,
@@ -53,26 +59,30 @@ async def git_check_updates(client, message):
 
             try:
                 sha, author, summary, timestamp = line.split("|")
-                date = datetime.fromtimestamp(int(timestamp)).strftime("%d %b %Y")
+
+                commit_time = datetime.fromtimestamp(
+                    int(timestamp)
+                ).strftime("%d %b %Y • %I:%M %p")
 
                 updates += (
                     f"**➣ #{i}**: [{summary}]({repo_link}/commit/{sha})\n"
                     f"👤 **Author:** {author}\n"
-                    f"📅 **Date:** {date}\n\n"
+                    f"🕒 **Time:** {commit_time}\n\n"
                 )
 
-            except:
+            except ValueError:
                 continue
 
         text = (
-            "**🚀 Updates Available!**\n\n"
+            f"**🚀 Updates Available ({commit_count} commits)**\n\n"
             "**📜 New Commits:**\n\n"
-            f"{updates}\n"
+            f"{updates}"
             "⚡ **Do you want to update now?**"
         )
 
+        # Telegram message limit protection
         if len(text) > 4096:
-            text = text[:4000] + "\n\n..."
+            text = text[:4000] + "\n\n...and more commits."
 
         buttons = InlineKeyboardMarkup(
             [
@@ -83,12 +93,15 @@ async def git_check_updates(client, message):
             ]
         )
 
-        await msg.edit(text, reply_markup=buttons, disable_web_page_preview=True)
+        await msg.edit(
+            text,
+            reply_markup=buttons,
+            disable_web_page_preview=True
+        )
 
     except Exception as e:
         await msg.edit(f"❌ **Update check failed:**\n`{e}`")
-
-
+        
 @app.on_callback_query(filters.regex("confirm_update") & filters.user(config.OWNER_ID))
 async def confirm_update(client, query):
 
