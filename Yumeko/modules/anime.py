@@ -15,6 +15,7 @@ from pyrogram.errors import UserNotParticipant, WebpageCurlFailed, WebpageMediaE
 from Yumeko.decorator.errors import error 
 from Yumeko import app
 from config import config
+from Yumeko.decorator.save import save
 
 OWNER = config.OWNER_ID
 BOT_USERNAME = config.BOT_USERNAME
