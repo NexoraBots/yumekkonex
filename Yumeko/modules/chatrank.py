@@ -135,9 +135,6 @@ async def rank_buttons(client, query: CallbackQuery):
 
     await query.answer()
 
-
-
-
 @app.on_message(filters.command("groupstats", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
 @save
@@ -150,38 +147,36 @@ async def groupstats(client, message):
 
     # Count admins
     admin_count = 0
-    async for _ in client.get_chat_members(chat.id, filter=ChatMembersFilter.ADMINISTRATORS):
+    async for _ in client.get_chat_members(
+            chat.id,
+            filter=ChatMembersFilter.ADMINISTRATORS,
+            limit=200
+        ):
         admin_count += 1
 
 
-    # Get ranking data
     groups_total = await get_top_groups("total")
     groups_today = await get_top_groups("today")
     groups_week = await get_top_groups("week")
 
-
     overall_rank = "N/A"
     today_rank = "N/A"
     week_rank = "N/A"
-
 
     for i, g in enumerate(groups_total, start=1):
         if g["chat_id"] == chat.id:
             overall_rank = i
             break
 
-
     for i, g in enumerate(groups_today, start=1):
         if g["chat_id"] == chat.id:
             today_rank = i
             break
 
-
     for i, g in enumerate(groups_week, start=1):
         if g["chat_id"] == chat.id:
             week_rank = i
             break
-
 
     text = (
         "**Group Statistics**\n\n"
@@ -198,7 +193,6 @@ async def groupstats(client, message):
     )
 
     await message.reply_text(text, disable_web_page_preview=True)
-    
 # Global chat ranks
 @app.on_message(filters.command("chatranks", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
