@@ -118,7 +118,7 @@ async def start_cmd(_, message: Message):
     await message.reply_photo(
         photo="https://files.catbox.moe/0esyec.jpg",
         caption=(
-            f"**𝖧𝖾𝗒, {user_mention} 🧸**\n"
+            f"**𝖧𝖾𝗒, {user_mention} 🍷**\n"
             f"**𝖨 𝖺𝗆 {bot_mention} ♡ , 𝗒𝗈𝗎𝗋 𝗏𝖾𝗋𝗌𝖺𝗍𝗂𝗅𝖾 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝖻𝗈𝗍, "
             f"𝖽𝖾𝗌𝗂𝗀𝗇𝖾𝖽 𝗍𝗈 𝗁𝖾𝗅𝗉 𝗒𝗈𝗎 𝗍𝖺𝗄𝖾 𝖼𝗈𝗇𝗍𝗋𝗈𝗅 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌 "
             f"𝗐𝗂𝗍𝗁 𝖾𝖺𝗌𝖾 𝗎𝗌𝗂𝗇𝗀 𝗆𝗒 𝗉𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌!**\n\n"
