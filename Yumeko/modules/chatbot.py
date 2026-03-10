@@ -72,6 +72,8 @@ async def handle_chatbot(client: Client, message: Message):
 
     m = message.text
 
+    bot_response = None  # Initialize
+
     # Fetch chatbot response from API asynchronously
     try:
         async with httpx.AsyncClient(timeout=15) as client_http:
@@ -84,17 +86,33 @@ async def handle_chatbot(client: Client, message: Message):
                     "msg": m,
                 }
             )
-            response_data = kuki_response.json()
-            bot_response = response_data.get("cnt", "𝖨 𝖼𝗈𝗎𝗅𝖽𝗇'𝗍 𝗉𝗋𝗈𝖼𝖾𝗌𝗌 𝗍𝗁𝖺𝗍 𝗋𝗂𝗀𝗁𝗍 𝗇𝗈𝗐.")
+            # Raise for non-200 responses
+            kuki_response.raise_for_status()
+
+            # Parse JSON safely
+            try:
+                response_data = kuki_response.json()
+                bot_response = response_data.get("cnt")
+            except Exception as e_json:
+                print(f"𝖤𝗋𝗋𝗈𝗋 𝗉𝖺𝗋𝗌𝗂𝗇𝗀 𝖠𝗉𝗂 𝗋𝖾𝗌𝗉𝗈𝗇𝗌𝖾: {e_json}")
+                bot_response = None
+
+            # Treat empty strings as failure
+            if not bot_response:
+                bot_response = None
+
     except httpx.RequestError as e:
         print(f"𝖤𝗋𝗋𝗈𝗋 𝖿𝖾𝗍𝖼𝗁𝗂𝗇𝗀 𝖼𝗁𝖺𝗍𝖻𝗈𝗍 𝗋𝖾𝗌𝗉𝗈𝗇𝗌𝖾: {e}")
+        bot_response = None
+    except httpx.HTTPStatusError as e:
+        print(f"𝖠𝗣𝗜 𝗋𝖾𝗍𝗎𝗋𝗇𝖾𝖽 𝗇𝗈𝗇-200 𝗌𝗍𝖺𝗍𝗎𝗌: {e}")
         bot_response = None
     except Exception as e:
         print(f"Unexpected error: {e}")
         bot_response = None
 
+    # Disable chatbot if response failed
     if bot_response is None:
-        # Notify the group about the issue and disable the chatbot
         await message.reply_text(
             "❌ 𝖢𝗁𝖺𝗍𝖻𝗈𝗍 𝗂𝗌 𝖿𝖺𝖼𝗂𝗇𝗀 𝗂𝗌𝗌𝗎𝖾𝗌 𝖺𝗇𝖽 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝖽𝗂𝗌𝖺𝖻𝗅𝖾𝖽 𝖿𝗈𝗋 𝗇𝗈𝗐. 𝖯𝗅𝖾𝖺𝗌𝖾 𝖼𝗈𝗇𝗍𝖺𝖼𝗍 𝗍𝗁𝖾 𝖻𝗈𝗍 𝗌𝗎𝗉𝗉𝗈𝗋𝗍."
         )
@@ -103,6 +121,7 @@ async def handle_chatbot(client: Client, message: Message):
 
     # Reply to the user's message
     await message.reply_text(bot_response)
+    
 __module__ = "𝖢𝗁𝖺𝗍𝖻𝗈𝗍"
 
 __help__ = "✧ /𝖼𝗁𝖺𝗍𝖻𝗈𝗍 : 𝖴𝗌𝖾 𝖨𝗍 𝖳𝗈 𝖤𝗇𝖺𝖻𝗅𝖾 𝖮𝗋 𝖣𝗂𝗌𝖺𝖻𝗅𝖾 𝖢𝗁𝖺𝗍𝖻𝗈𝗍 𝖨𝗇 𝖸𝗈𝗎𝗋 𝖦𝗋𝗈𝗎𝗉."
