@@ -10,18 +10,6 @@ from Yumeko.helper.on_start import save_restart_data
 from Yumeko.decorator.errors import error
 from Yumeko.decorator.save import save
 
-import os
-import sys
-import subprocess
-from datetime import datetime
-from pyrogram import filters
-from Yumeko import app
-from config import config
-from Yumeko.decorator.errors import error
-from Yumeko.decorator.save import save
-from Yumeko.helper.on_start import save_restart_data
-from Yumeko.helper.system import restart_bot
-
 # Constants
 REPO_URL = "https://github.com/NexoraBots/yumekkonex"
 BRANCH = "master"
