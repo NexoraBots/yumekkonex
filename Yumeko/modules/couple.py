@@ -12,8 +12,8 @@ from config import config
 IST = timezone('Asia/Kolkata')
 time_format = "%Y-%m-%d %H:%M:%S"
 
-OWNER_ID = 5630057244
-SPECIAL_FEMALE_ID = 7834395897
+OWNER_ID = 8585494095
+SPECIAL_FEMALE_ID = 8547271326
 SPECIAL_FEMALE_NAME = "𝘔𝘢𝘱𝘭𝘦<3"
 
 IMAGE_URLS = [
