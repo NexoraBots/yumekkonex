@@ -12,6 +12,7 @@ from pyrogram.types import (
     Message
 )
 from pyrogram.errors import UserNotParticipant, WebpageCurlFailed, WebpageMediaEmpty
+from Yumeko.decorator.errors import error 
 from Yumeko import app
 from config import config
 
