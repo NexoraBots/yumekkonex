@@ -1,6 +1,6 @@
 from pyrogram import filters , Client
 from pyrogram.enums import ChatMemberStatus as CMS
-from pyrogram.types import CallbackQuery, ChatJoinRequest
+from pyrogram.types import CallbackQuery, ChatJoinRequest, Message
 from pyrogram.types import InlineKeyboardButton as ikb
 from pyrogram.types import InlineKeyboardMarkup as ikm
 from Yumeko import app , JOIN_UPDATE_GROUP
