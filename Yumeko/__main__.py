@@ -165,31 +165,48 @@ async def show_help_menu(client, query: CallbackQuery):
         invert_media=True
     )
 
-# Callback query handler for module help
+CAPTION_LIMIT = 1024
+TEXT_LIMIT = 4096
+
+
 @app.on_callback_query(filters.regex(r"^help_\d+_\d+$"))
 async def handle_help_callback(client, query: CallbackQuery):
     data = query.data
+
     try:
-        # Extract the numeric index and page from the callback data
         parts = data.split("_")
         module_index = int(parts[1])
         current_page = int(parts[2])
 
         modules = sorted(LOADED_MODULES.keys())
-
-        # Retrieve the module name using the index
         module_name = modules[module_index]
+
         help_text = LOADED_MODULES.get(module_name, "No help available for this module.")
 
-        # Edit the message to display the help text
-        await query.message.edit(
-            text=f"{help_text}",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Back", callback_data=f"area_{current_page}")]
-            ])
-        )
-    except (ValueError, IndexError) as e:
-        await query.answer("Invalid module selected. Please try again.")
+        # If help text is small → edit normally
+        if len(help_text) <= TEXT_LIMIT:
+            await query.message.edit(
+                text=help_text,
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("⬅️ Back", callback_data=f"area_{current_page}")]]
+                ),
+                disable_web_page_preview=True
+            )
+
+        # If help text is large → send new message
+        else:
+            await query.message.reply_text(
+                text=help_text,
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("⬅️ Back", callback_data=f"area_{current_page}")]]
+                ),
+                disable_web_page_preview=True
+            )
+
+        await query.answer()
+
+    except (ValueError, IndexError):
+        await query.answer("Invalid module selected.", show_alert=True)
 
 # Callback query handler for pagination
 @app.on_callback_query(filters.regex(r"^area_\d+$"))
