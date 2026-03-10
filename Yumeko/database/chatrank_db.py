@@ -4,7 +4,45 @@ from datetime import datetime
 chatrank_collection = db.ChatRanks
 groupstats_collection = db.GroupStats
 
+async def get_user_today(chat_id: int, user_id: int):
 
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    data = await chatrank_collection.find_one(
+        {"chat_id": chat_id, "user_id": user_id}
+    )
+
+    if not data:
+        return 0
+
+    return data.get("daily", {}).get(today, 0)
+
+
+async def get_user_week(chat_id: int, user_id: int):
+
+    week = datetime.utcnow().strftime("%Y-%W")
+
+    data = await chatrank_collection.find_one(
+        {"chat_id": chat_id, "user_id": user_id}
+    )
+
+    if not data:
+        return 0
+
+    return data.get("weekly", {}).get(week, 0)
+
+
+async def get_user_total(chat_id: int, user_id: int):
+
+    data = await chatrank_collection.find_one(
+        {"chat_id": chat_id, "user_id": user_id}
+    )
+
+    if not data:
+        return 0
+
+    return data.get("total", 0)
+    
 async def add_message(chat_id: int, user_id: int, name: str, username: str | None):
 
     today = datetime.utcnow().strftime("%Y-%m-%d")
