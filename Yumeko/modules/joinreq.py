@@ -49,7 +49,6 @@ async def request_toggle(client: Client, message: Message):
             "𝖴𝗌𝖾: enable / disable"
         )
 
-
 @app.on_chat_join_request(group=JOIN_UPDATE_GROUP)
 async def join_request_handler(c: Client, j: ChatJoinRequest):
 
@@ -73,55 +72,71 @@ async def join_request_handler(c: Client, j: ChatJoinRequest):
     if userr.username:
         txt += f"𝖴𝗌𝖾𝗋𝗇𝖺𝗆𝖾: @{userr.username}\n"
 
-    kb = [
-        [
-            ikb("Accept", f"accept_joinreq_{user}"),
-            ikb("Decline", f"decline_joinreq_{user}")
-        ]
-    ]
+    kb = [[
+        ikb("Accept", f"accept_joinreq_{user}"),
+        ikb("Decline", f"decline_joinreq_{user}")
+    ]]
 
     await c.send_message(chat, txt, reply_markup=ikm(kb))
 
 
-@app.on_callback_query(filters.regex("^accept_joinreq_uest_") | filters.regex("^decline_joinreq_uest_"))
+@app.on_callback_query(filters.regex("^(accept|decline)_joinreq_"))
 async def accept_decline_request(c: Client, q: CallbackQuery):
-    user_id = q.from_user.id
+
+    admin = q.from_user.id
     chat = q.message.chat.id
+
     try:
-        user_status = (await q.message.chat.get_member(user_id)).status
-        if user_status not in {CMS.OWNER, CMS.ADMINISTRATOR}:
-            await q.answer(
-                "You're not even an admin, don't try this explosive shit!",
-                show_alert=True,
+        status = (await q.message.chat.get_member(admin)).status
+        if status not in {CMS.OWNER, CMS.ADMINISTRATOR}:
+            return await q.answer(
+                "𝖮𝗇𝗅𝗒 𝖺𝖽𝗆𝗂𝗇𝗌 𝖼𝖺𝗇 𝗎𝗌𝖾 𝗍𝗁𝗂𝗌.",
+                show_alert=True
             )
-            return
-    except Exception:
-        await q.answer("Unknow error occured. You are not admin or owner")
-        return
-    split = q.data.split("_")
-    chat = q.message.chat.id
-    user = int(split[-1])
-    data = split[0]
+    except:
+        return await q.answer("𝖤𝗋𝗋𝗈𝗋 𝖼𝗁𝖾𝖼𝗄𝗂𝗇𝗀 𝖺𝖽𝗆𝗂𝗇.", True)
+
+    data = q.data.split("_")
+    action = data[0]
+    user = int(data[-1])
+
     try:
         userr = await c.get_users(user)
-    except Exception:
-        userr = None
-    if data == "accept":
-        try:
-            await c.approve_chat_join_request(chat, user)
-            await q.answer(f"Accepted join request of the {userr.mention if userr else user}", True)
-            await q.edit_message_text(f"{q.from_user.mention} accepted join request of {userr.mention if userr else user}")
-        except Exception :
-            return
-    elif data == "decline":
-        try:
-            await c.decline_chat_join_request(chat, user)
-            await q.answer(f"DECLINED: {user}")
-            await q.edit_message_text(f"{q.from_user.mention} declined join request of {userr.mention if userr else user}")
-        except Exception :
-            return
-    return
+        mention = userr.mention
+    except:
+        mention = f"`{user}`"
 
+    try:
+
+        if action == "accept":
+            await c.approve_chat_join_request(chat, user)
+            text = f"{q.from_user.mention} 𝖺𝖼𝖼𝖾𝗉𝗍𝖾𝖽 𝗃𝗈𝗂𝗇 𝗋𝖾𝗊𝗎𝖾𝗌𝗍 𝗈𝖿 {mention}"
+
+        else:
+            await c.decline_chat_join_request(chat, user)
+            text = f"{q.from_user.mention} 𝖽𝖾𝖼𝗅𝗂𝗇𝖾𝖽 𝗃𝗈𝗂𝗇 𝗋𝖾𝗊𝗎𝖾𝗌𝗍 𝗈𝖿 {mention}"
+
+    except Exception as e:
+
+        if "USER_ALREADY_PARTICIPANT" in str(e):
+            text = f"{mention} 𝗂𝗌 𝖺𝗅𝗋𝖾𝖺𝖽𝗒 𝗂𝗇 𝗍𝗁𝖾 𝗀𝗋𝗈𝗎𝗉."
+
+        elif "INVITE_REQUEST_SENT" in str(e):
+            text = f"{mention} 𝗁𝖺𝗌 𝗇𝗈 𝗉𝖾𝗇𝖽𝗂𝗇𝗀 𝗋𝖾𝗊𝗎𝖾𝗌𝗍."
+
+        else:
+            text = f"𝖤𝗋𝗋𝗈𝗋: {e}"
+
+    try:
+        await q.message.edit_text(text)
+    except:
+        try:
+            await q.message.delete()
+            await c.send_message(chat, text)
+        except:
+            pass
+
+    await q.answer()
 
 __module__ = "𝖩𝗈𝗂𝗇 𝖱𝖾𝗊𝗎𝖾𝗌𝗍"
 
