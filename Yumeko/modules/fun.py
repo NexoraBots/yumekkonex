@@ -13,6 +13,34 @@ from Yumeko.decorator.errors import error
 
 
 BASE_URL = config.BASE_URL
+
+command_to_category = {
+    "waifus": "waifu",
+    "neko": "neko",
+    "shinobu": "shinobu",
+    "megumin": "megumin",
+    "bully": "bully",
+    "cuddle": "cuddle",
+    "cry": "cry",
+    "awoo": "awoo",
+    "lick": "lick",
+    "smug": "smug",
+    "bonk": "bonk",
+    "yeet": "yeet",
+    "blush": "blush",
+    "smile": "smile",
+    "wave": "wave",
+    "highfive": "highfive",
+    "handhold": "handhold",
+    "nom": "nom",
+    "bite": "bite",
+    "glomp": "glomp",
+    "happy": "happy",
+    "wink": "wink",
+    "poke": "poke",
+    "dance": "dance",
+    "cringe": "cringe"
+}
 # Command handler for /hug
 @bot.on_message(filters.command("hug" , prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
