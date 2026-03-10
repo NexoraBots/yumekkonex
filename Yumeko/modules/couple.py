@@ -1,14 +1,14 @@
+import asyncio
 import random
-from Yumeko.database import couple_collection , waifu_collection
+from Yumeko.database import couple_collection
 from datetime import datetime, timedelta
 from pytz import timezone
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from Yumeko.database.couple_db import save_couple , save_waifu
+from Yumeko.database.couple_db import save_couple
 from Yumeko import app
 from config import config
 
-# Define IST timezone
 IST = timezone('Asia/Kolkata')
 time_format = "%Y-%m-%d %H:%M:%S"
 
@@ -16,7 +16,6 @@ OWNER_ID = 5630057244
 SPECIAL_FEMALE_ID = 7834395897
 SPECIAL_FEMALE_NAME = "𝘔𝘢𝘱𝘭𝘦<3"
 
-# List of image URLs
 IMAGE_URLS = [
     "https://files.catbox.moe/5zsvmu.jpg",
     "https://files.catbox.moe/wte8ko.jpg",
@@ -25,25 +24,18 @@ IMAGE_URLS = [
     "https://files.catbox.moe/gikzhy.jpg"
 ]
 
-async def choose_couple(chat_id: int, members: list) -> tuple:
-    """Choose a random male and female member from the chat members."""
+async def choose_couple(members: list) -> tuple:
     humans = [member for member in members if not member['is_bot']]
     if len(humans) < 2:
         return None, None
-
     male = random.choice(humans)
     female = random.choice([m for m in humans if m != male])
     return male, female
 
-@app.on_message(filters.command("couple" , config.COMMAND_PREFIXES) & filters.group)
-@app.on_message(filters.regex(r"(?i)^Nibba Nibbi$") & filters.group)
-async def couple_handler(client: Client, message: Message):
-    chat_id = message.chat.id
-
-    # Choose a random image
+async def process_couple(client: Client, chat_id: int, message: Message):
     img_url = random.choice(IMAGE_URLS)
 
-    # Check if the command is used by OWNER_ID
+    # Check if OWNER_ID is using the command
     if message.from_user.id == OWNER_ID:
         male_mention = f"[{message.from_user.first_name}](tg://user?id={OWNER_ID})"
         female_mention = f"[{SPECIAL_FEMALE_NAME}](tg://user?id={SPECIAL_FEMALE_ID})"
@@ -59,7 +51,7 @@ async def couple_handler(client: Client, message: Message):
         )
         return
 
-    # Check if a couple is already chosen and within 24 hours
+    # Check if a couple is already chosen within 24 hours
     couple = await couple_collection.find_one({"chat_id": chat_id})
     if couple:
         date_chosen = IST.localize(datetime.strptime(couple["date"], time_format))
@@ -78,29 +70,28 @@ async def couple_handler(client: Client, message: Message):
             )
             return
 
-    members = [
-        {
-            "user_id": member.user.id,
-            "first_name": member.user.first_name,
-            "is_bot": member.user.is_bot,
-        }
-        async for member in client.get_chat_members(chat_id)
-        if not member.user.is_bot and member.user.first_name  # Exclude bots and deleted accounts
-    ]
+    # Fetch a limited number of chat members asynchronously to avoid long delays
+    members = []
+    async for member in client.get_chat_members(chat_id, limit=100):  # Fetch only 100 random members max
+        if not member.user.is_bot and member.user.first_name:
+            members.append({
+                "user_id": member.user.id,
+                "first_name": member.user.first_name,
+                "is_bot": member.user.is_bot
+            })
 
-
-    # Choose a new couple
-    male, female = await choose_couple(chat_id, members)
+    # Choose couple
+    male, female = await choose_couple(members)
     if not male or not female:
         await message.reply_text("Couldn't find enough human members to form a couple.")
         return
 
-    # Save the new couple in the database
-    male_mention = f"[{male['first_name']}](tg://user?id={male['user_id']})"
-    female_mention = f"[{female['first_name']}](tg://user?id={female['user_id']})"
+    # Save couple to DB
     await save_couple(chat_id, male["user_id"], male["first_name"], female["user_id"], female["first_name"])
 
-    # Send the couple of the day message with an image
+    male_mention = f"[{male['first_name']}](tg://user?id={male['user_id']})"
+    female_mention = f"[{female['first_name']}](tg://user?id={female['user_id']})"
+
     await client.send_photo(
         chat_id,
         photo=img_url,
@@ -111,6 +102,12 @@ async def couple_handler(client: Client, message: Message):
             f"╰───•➢♡"
         )
     )
+
+@app.on_message(filters.command("couple", config.COMMAND_PREFIXES) & filters.group)
+@app.on_message(filters.regex(r"(?i)^Nibba Nibbi$") & filters.group)
+async def couple_handler(client: Client, message: Message):
+    # Run the couple selection in the background so bot doesn't block
+    asyncio.create_task(process_couple(client, message.chat.id, message))
     
 @app.on_message(filters.command("waifu", config.COMMAND_PREFIXES) & filters.group)
 @app.on_message(filters.regex(r"(?i)^Waifuu$") & filters.group)
