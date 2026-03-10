@@ -12,6 +12,7 @@ pytz
 unidecode
 telegraph
 pillow
+sympy
 httpx[http2]
 python-arq
 gtts
