@@ -2,6 +2,7 @@ import os
 import importlib
 import asyncio
 import json
+import random
 from pyrogram import idle, filters , Client
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery , Message
 from Yumeko import app, log, telebot, BACKUP_FILE_JSON, ptb, scheduler
