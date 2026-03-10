@@ -2,9 +2,9 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 import aiohttp
 from Yumeko import app
-from config import config 
+from config import config
 from pyrogram.enums import ParseMode
-from Yumeko.decorator.save import save 
+from Yumeko.decorator.save import save
 from Yumeko.decorator.errors import error
 
 class MatchManager:
@@ -16,11 +16,22 @@ class MatchManager:
     async def fetch_matches(self):
         async with aiohttp.ClientSession() as session:
             async with session.get(self.api_url) as response:
-                self.matches = await response.json()
+                data = await response.json()
+                # Ensure matches is a list
+                if isinstance(data, dict):
+                    # Try to get the list of matches if the API wraps it
+                    self.matches = data.get("matches") or []
+                elif isinstance(data, list):
+                    self.matches = data
+                else:
+                    self.matches = []
 
     def get_next_matches(self, count):
-        next_matches = self.matches[self.match_count : self.match_count + count]
-        self.match_count += count
+        # Safe slicing
+        if not isinstance(self.matches, list):
+            return []
+        next_matches = self.matches[self.match_count:self.match_count + count]
+        self.match_count += len(next_matches)
         return next_matches
 
     def reset_matches(self):
@@ -29,11 +40,11 @@ class MatchManager:
 
 
 async def get_match_text(match, sport):
-    match_text = f"{'🏏' if sport == 'cricket' else '⚽️'} **{match['title']}**\n\n"
-    match_text += f"🗓 **𝖣𝖺𝗍𝖾:** {match['date']}\n"
-    match_text += f"🏆 **𝖳𝖾𝖺𝗆 1:** {match['team1']}\n"
-    match_text += f"🏆 **𝖳𝖾𝖺𝗆 2:** {match['team2']}\n"
-    match_text += f"🏟️ **𝖵𝖾𝗇𝗎𝖾:** {match['venue']}"
+    match_text = f"{'🏏' if sport == 'cricket' else '⚽️'} **{match.get('title','No Title')}**\n\n"
+    match_text += f"🗓 **𝖣𝖺𝗍𝖾:** {match.get('date','Unknown')}\n"
+    match_text += f"🏆 **𝖳𝖾𝖺𝗆 1:** {match.get('team1','N/A')}\n"
+    match_text += f"🏆 **𝖳𝖾𝖺𝗆 2:** {match.get('team2','N/A')}\n"
+    match_text += f"🏟️ **𝖵𝖾𝗇𝗎𝖾:** {match.get('venue','Unknown')}"
     return match_text
 
 
@@ -53,7 +64,7 @@ cricket_manager = MatchManager(config.CRICKET_API_URL)
 football_manager = MatchManager(config.FOOTBALL_API_URL)
 
 
-@app.on_message(filters.command("cricket"  , prefixes=config.COMMAND_PREFIXES))
+@app.on_message(filters.command("cricket", prefixes=config.COMMAND_PREFIXES))
 @error
 @save
 async def get_cricket_matches(client: Client, message: Message):
@@ -66,8 +77,11 @@ async def get_cricket_matches(client: Client, message: Message):
             return
 
         next_matches = cricket_manager.get_next_matches(1)
-        match = next_matches[0]
+        if not next_matches:
+            await message.reply_text("𝖭𝗈 𝖼𝗋𝗂𝖼𝗄𝖾𝗍 𝗆𝖺𝗍𝖼𝗁𝖾𝗌 𝖿𝗈𝗎𝗇𝖽.")
+            return
 
+        match = next_matches[0]
         match_text = await get_match_text(match, "cricket")
         reply_markup = create_inline_keyboard("cricket")
 
@@ -79,7 +93,7 @@ async def get_cricket_matches(client: Client, message: Message):
         await message.reply_text(f"𝖠𝗇 𝖾𝗋𝗋𝗈𝗋 𝗈𝖼𝖼𝗎𝗋𝗋𝖾𝖽: {str(e)}")
 
 
-@app.on_message(filters.command("football"  , prefixes=config.COMMAND_PREFIXES))
+@app.on_message(filters.command("football", prefixes=config.COMMAND_PREFIXES))
 @error
 @save
 async def get_football_matches(client: Client, message: Message):
@@ -92,8 +106,11 @@ async def get_football_matches(client: Client, message: Message):
             return
 
         next_matches = football_manager.get_next_matches(1)
-        match = next_matches[0]
+        if not next_matches:
+            await message.reply_text("𝖭𝗈 𝖿𝗈𝗈𝗍𝖻𝖺𝗅𝗅 𝗆𝖺𝗍𝖼𝗁𝖾𝗌 𝖿𝗈𝗎𝗇𝖽.")
+            return
 
+        match = next_matches[0]
         match_text = await get_match_text(match, "football")
         reply_markup = create_inline_keyboard("football")
 
@@ -117,7 +134,6 @@ async def show_next_match(client: Client, query: CallbackQuery):
             return
 
         next_matches = manager.get_next_matches(3)
-
         if not next_matches:
             await query.answer(f"𝖭𝗈 𝗆𝗈𝗋𝖾 {sport} 𝗆𝖺𝗍𝖼𝗁𝖾𝗌 𝖺𝗏𝖺𝗂𝗅𝖺𝖻𝗅𝖾.")
             return
@@ -138,8 +154,6 @@ async def show_next_match(client: Client, query: CallbackQuery):
 
     except Exception as e:
         await query.message.reply_text(f"𝖠𝗇 𝖾𝗋𝗋𝗈𝗋 𝗈𝖼𝖼𝗎𝗋𝗋𝖾𝖽: {str(e)}")
-
-
 __module__ = "𝖲𝗉𝗈𝗋𝗍𝗌"
 
 __help__ = """𝖳𝗁𝗂𝗌 𝗆𝗈𝖽𝗎𝗅𝖾 𝗉𝗋𝗈𝗏𝗂𝖽𝖾𝗌 𝗅𝗂𝗏𝖾 𝗆𝖺𝗍𝖼𝗁 𝗎𝗉𝖽𝖺𝗍𝖾𝗌 𝖿𝗈𝗋 𝖢𝗋𝗂𝖼𝗄𝖾𝗍 𝖺𝗇𝖽 𝖥𝗈𝗈𝗍𝖻𝖺𝗅𝗅.
