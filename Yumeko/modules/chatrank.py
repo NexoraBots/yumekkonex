@@ -1,5 +1,6 @@
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.enums import ChatMembersFilter
 from Yumeko import app
 from config import config
 from Yumeko.decorator.save import save
@@ -33,6 +34,7 @@ async def chatrank_message_counter(client, message):
     )
 
     await check_achievements(client, message)
+    
     
 # Leaderboard builder
 async def build_leaderboard(chat_id, mode="total"):
@@ -134,7 +136,8 @@ async def rank_buttons(client, query: CallbackQuery):
     await query.answer()
 
 
-# Group stats
+
+
 @app.on_message(filters.command("groupstats", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
 @save
@@ -145,25 +148,57 @@ async def groupstats(client, message):
     members = await client.get_chat_members_count(chat.id)
     msgs = await get_group_total(chat.id)
 
-    admins = await client.get_chat_members(chat.id, filter="administrators")
-
+    # Count admins
     admin_count = 0
-    async for _ in admins:
+    async for _ in client.get_chat_members(chat.id, filter=ChatMembersFilter.ADMINISTRATORS):
         admin_count += 1
 
+
+    # Get ranking data
+    groups_total = await get_top_groups("total")
+    groups_today = await get_top_groups("today")
+    groups_week = await get_top_groups("week")
+
+
+    overall_rank = "N/A"
+    today_rank = "N/A"
+    week_rank = "N/A"
+
+
+    for i, g in enumerate(groups_total, start=1):
+        if g["chat_id"] == chat.id:
+            overall_rank = i
+            break
+
+
+    for i, g in enumerate(groups_today, start=1):
+        if g["chat_id"] == chat.id:
+            today_rank = i
+            break
+
+
+    for i, g in enumerate(groups_week, start=1):
+        if g["chat_id"] == chat.id:
+            week_rank = i
+            break
+
+
     text = (
-        "📊 **Group Statistics**\n\n"
-        f"🏷 Name: {chat.title}\n"
-        f"🆔 Chat ID: `{chat.id}`\n"
-        f"👥 Members: {members:,}\n"
-        f"👮 Admins: {admin_count}\n"
-        f"✉️ Total Messages: {msgs:,}\n"
-        f"📅 Chat Type: {chat.type}"
+        "**Group Statistics**\n\n"
+        f"Name ⋟ {chat.title}\n"
+        f"Chat ID ⋟ `{chat.id}`\n"
+        f"Members ⋟ {members:,}\n"
+        f"Admins ⋟ {admin_count}\n"
+        f"Total Messages ⋟ {msgs:,}\n"
+        f"Chat Type ⋟ {chat.type}\n\n"
+        f"Group Rank\n"
+        f"Overall ⋟ #{overall_rank}\n"
+        f"Today ⋟ #{today_rank}\n"
+        f"Weekly ⋟ #{week_rank}"
     )
 
-    await message.reply_text(text)
-
-
+    await message.reply_text(text, disable_web_page_preview=True)
+    
 # Global chat ranks
 @app.on_message(filters.command("chatranks", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
@@ -238,6 +273,7 @@ async def check_achievements(client, message):
             f"**Group Achievement** ⋟ {chat.title} reached [ {group_total:,} total messages ]",
             disable_web_page_preview=True
         )
+
 
 __module__ = "𝖢𝗁𝖺𝗍 𝖱𝖺𝗇𝗄𝗌"
 
