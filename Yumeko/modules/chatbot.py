@@ -50,54 +50,59 @@ async def toggle_announcements(client: Client, callback_query : CallbackQuery):
         await disable_chatbot(chat_id)
         await callback_query.message.edit_text("**🔴 𝖢𝗁𝖺𝗍𝖡𝗈𝗍 𝗁𝖺𝗏𝖾 𝖻𝖾𝖾𝗇 𝖽𝗂𝗌𝖺𝖻𝗅𝖾𝖽 𝖿𝗈𝗋 𝗍𝗁𝗂𝗌 𝖼𝗁𝖺𝗍.**")
 
-@app.on_message(filters.group | filters.private & filters.reply , group=CHATBOT_GROUP)
+@app.on_message(filters.group | (filters.private & filters.reply), group=CHATBOT_GROUP)
 @error
 @save
-async def handle_chatbot(client : Client , message : Message):
+async def handle_chatbot(client: Client, message: Message):
 
-    if not message.from_user :
+    if not message.from_user:
         return
 
     if not await is_chatbot_enabled(message.chat.id):
         return    
 
-    if message.from_user and message.reply_to_message.from_user.id == config.BOT_ID:
-        await client.send_chat_action(message.chat.id , action = ChatAction.TYPING)
+    # Ensure it's a reply to the bot
+    if message.reply_to_message and message.reply_to_message.from_user:
+        if message.reply_to_message.from_user.id != config.BOT_ID:
+            return  # Not replying to the bot, ignore
+    else:
+        return  # No reply or missing from_user, ignore
 
-        m = message.text
-        
-            # Fetch chatbot response from API asynchronously
-        try:
-            async with httpx.AsyncClient(timeout=15) as client:
-                kuki_response = await client.get(
-                    "http://api.brainshop.ai/get",
-                    params={
-                        "bid": 176809,
-                        "key": "lbMN8CXTGzhn1NKG",
-                        "uid": message.from_user.id,
-                        "msg": m,
-                    }
-                )
-                response_data = kuki_response.json()
-                bot_response = response_data.get("cnt", "𝖨 𝖼𝗈𝗎𝗅𝖽𝗇'𝗍 𝗉𝗋𝗈𝖼𝖾𝗌𝗌 𝗍𝗁𝖺𝗍 𝗋𝗂𝗀𝗁𝗍 𝗇𝗈𝗐.")
-        except httpx.RequestError as e:
-            print(f"𝖤𝗋𝗋𝗈𝗋 𝖿𝖾𝗍𝖼𝗁𝗂𝗇𝗀 𝖼𝗁𝖺𝗍𝖻𝗈𝗍 𝗋𝖾𝗌𝗉𝗈𝗇𝗌𝖾: {e}")
-            bot_response = None
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            bot_response = None
-    
-        if bot_response is None:
-            # Notify the group about the issue and disable the chatbot
-            await message.reply_text(
-                "❌ 𝖢𝗁𝖺𝗍𝖻𝗈𝗍 𝗂𝗌 𝖿𝖺𝖼𝗂𝗇𝗀 𝗂𝗌𝗌𝗎𝖾𝗌 𝖺𝗇𝖽 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝖽𝗂𝗌𝖺𝖻𝗅𝖾𝖽 𝖿𝗈𝗋 𝗇𝗈𝗐. 𝖯𝗅𝖾𝖺𝗌𝖾 𝖼𝗈𝗇𝗍𝖺𝖼𝗍 𝗍𝗁𝖾 𝖻𝗈𝗍 𝗌𝗎𝗉𝗉𝗈𝗋𝗍."
+    await client.send_chat_action(message.chat.id, action=ChatAction.TYPING)
+
+    m = message.text
+
+    # Fetch chatbot response from API asynchronously
+    try:
+        async with httpx.AsyncClient(timeout=15) as client_http:
+            kuki_response = await client_http.get(
+                "http://api.brainshop.ai/get",
+                params={
+                    "bid": 176809,
+                    "key": "lbMN8CXTGzhn1NKG",
+                    "uid": message.from_user.id,
+                    "msg": m,
+                }
             )
-            await disable_chatbot(message.chat.id)
-            return
-    
-        # Reply to the user's message
-        await message.reply_text(bot_response)
+            response_data = kuki_response.json()
+            bot_response = response_data.get("cnt", "𝖨 𝖼𝗈𝗎𝗅𝖽𝗇'𝗍 𝗉𝗋𝗈𝖼𝖾𝗌𝗌 𝗍𝗁𝖺𝗍 𝗋𝗂𝗀𝗁𝗍 𝗇𝗈𝗐.")
+    except httpx.RequestError as e:
+        print(f"𝖤𝗋𝗋𝗈𝗋 𝖿𝖾𝗍𝖼𝗁𝗂𝗇𝗀 𝖼𝗁𝖺𝗍𝖻𝗈𝗍 𝗋𝖾𝗌𝗉𝗈𝗇𝗌𝖾: {e}")
+        bot_response = None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        bot_response = None
 
+    if bot_response is None:
+        # Notify the group about the issue and disable the chatbot
+        await message.reply_text(
+            "❌ 𝖢𝗁𝖺𝗍𝖻𝗈𝗍 𝗂𝗌 𝖿𝖺𝖼𝗂𝗇𝗀 𝗂𝗌𝗌𝗎𝖾𝗌 𝖺𝗇𝖽 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝖽𝗂𝗌𝖺𝖻𝗅𝖾𝖽 𝖿𝗈𝗋 𝗇𝗈𝗐. 𝖯𝗅𝖾𝖺𝗌𝖾 𝖼𝗈𝗇𝗍𝖺𝖼𝗍 𝗍𝗁𝖾 𝖻𝗈𝗍 𝗌𝗎𝗉𝗉𝗈𝗋𝗍."
+        )
+        await disable_chatbot(message.chat.id)
+        return
+
+    # Reply to the user's message
+    await message.reply_text(bot_response)
 __module__ = "𝖢𝗁𝖺𝗍𝖻𝗈𝗍"
 
 __help__ = "✧ /𝖼𝗁𝖺𝗍𝖻𝗈𝗍 : 𝖴𝗌𝖾 𝖨𝗍 𝖳𝗈 𝖤𝗇𝖺𝖻𝗅𝖾 𝖮𝗋 𝖣𝗂𝗌𝖺𝖻𝗅𝖾 𝖢𝗁𝖺𝗍𝖻𝗈𝗍 𝖨𝗇 𝖸𝗈𝗎𝗋 𝖦𝗋𝗈𝗎𝗉."
