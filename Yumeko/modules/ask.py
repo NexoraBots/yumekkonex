@@ -7,8 +7,12 @@ from Yumeko.decorator.save import save
 from Yumeko.decorator.errors import error
 import httpx
 
+# Use your actual NVIDIA AI key
 NVIDIA_AI_KEY = "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"
+# Correct endpoint
 NVIDIA_API_URL = "https://api.nvidia.ai/v1/chat/completions"
+# Replace with a valid NVIDIA AI model
+NVIDIA_AI_MODEL = "nvidia:dgx-chat-3.5"
 
 @app.on_message(filters.command("ask", config.COMMAND_PREFIXES))
 @error
@@ -22,17 +26,20 @@ async def ask_nvidia(client: Client, message: Message):
     processing_message = await message.reply_text("💭 Thinking... Please wait.", quote=True)
 
     try:
-        # Call NVIDIA AI API
         async with httpx.AsyncClient(timeout=60) as session:
             payload = {
-                "model": "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",
+                "model": NVIDIA_AI_MODEL,
                 "messages": [
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
                 ]
             }
-            headers = {"Authorization": f"Bearer {NVIDIA_AI_KEY}"}
+            headers = {
+                "Authorization": f"Bearer {NVIDIA_AI_KEY}",
+                "Content-Type": "application/json"
+            }
             response = await session.post(NVIDIA_API_URL, json=payload, headers=headers)
+            response.raise_for_status()  # Raises error for non-200 responses
             response_data = response.json()
 
         # Extract AI response
@@ -42,8 +49,13 @@ async def ask_nvidia(client: Client, message: Message):
 
         await processing_message.edit_text(f"**Prompt:** {prompt}\n\n**Response:** {answer}")
 
+    except httpx.RequestError:
+        await processing_message.edit_text("⚠️ Network error: could not reach NVIDIA API. Check your DNS or internet connection.")
+    except httpx.HTTPStatusError as e:
+        await processing_message.edit_text(f"⚠️ API returned error {e.response.status_code}: {e.response.text}")
     except Exception as e:
-        await processing_message.edit_text(f"An error occurred: {e}")
-        
+        await processing_message.edit_text(f"An unexpected error occurred: {e}")
+
+
 __module__ = "𝖠𝗌𝗄"
-__help__ = """✧ /ask <prompt> : 𝖴𝗌𝖾 𝖦𝖯𝖳-3.5-𝗍𝗎𝗋𝖻𝗈 𝗍𝗈 𝗀𝖾𝗇𝖾𝗋𝖺𝗍𝖾 𝗋𝖾𝗌𝗉𝗈𝗇𝗌𝖾𝗌."""
+__help__ = """✧ /ask <prompt> : 𝖴𝗌𝖾 NVIDIA AI to generate responses."""
