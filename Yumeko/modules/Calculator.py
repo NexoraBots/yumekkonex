@@ -17,7 +17,7 @@ def calculate_expression(expression: str):
     except Exception:
         return None
 
-@app.on_message(filters.command(["𝖼𝖺𝗅𝖼𝗎𝗅𝖺𝗍𝖾", "𝖼𝖺𝗅𝖼"], prefixes=config.COMMAND_PREFIXES))
+@app.on_message(filters.command(["calculate", "calc"], prefixes=config.COMMAND_PREFIXES))
 @save
 @error
 async def calculator(client: Client, message: Message):
