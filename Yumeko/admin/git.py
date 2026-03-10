@@ -20,7 +20,7 @@ BRANCH = "master"
 @save
 async def git_pull_command(client, message):
     try:
-        msg = await message.reply("🔄 **Checking for updates....**")
+        msg = await message.reply("🔄 **Checking for updates...**")
 
         # Initialize git if missing
         if not os.path.exists(".git"):
