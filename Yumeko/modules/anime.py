@@ -2,6 +2,7 @@ import asyncio
 import time
 import random
 import re
+import requests
 from pyrogram import filters, Client
 from pyrogram.enums import ChatMemberStatus, ChatType
 from pyrogram.types import (
