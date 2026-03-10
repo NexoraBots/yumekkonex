@@ -173,12 +173,10 @@ async def remove_blsticker_command(client: Client, message: Message):
         await remove_blacklisted_sticker(chat_id, sticker_id)
         await message.reply(f"𝖱𝖾𝗆𝗈𝗏𝖾𝖽 𝗍𝗁𝖾 𝗌𝗍𝗂𝖼𝗄𝖾𝗋 𝖿𝗋𝗈𝗆 𝗍𝗁𝖾 𝖻𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍 𝗂𝗇 <b>{message.chat.title}</b>.\n- <code>{sticker_id}</code>", parse_mode=ParseMode.HTML)
 
-
 @app.on_message(filters.group & ~filters.me, BLACKLIST_GROUP)
 @error
 @save
 async def blacklist_handler(client: Client, message: Message):
-    
     if not message.from_user:
         return
 
@@ -187,55 +185,65 @@ async def blacklist_handler(client: Client, message: Message):
     blacklisted_words = await get_blacklisted_words(chat_id)
     blacklisted_stickers = await get_blacklisted_stickers(chat_id)
 
-
-
-    if await is_user_approved(chat_id , message.from_user.id):
+    # Ignore approved users
+    if await is_user_approved(chat_id, message.from_user.id):
         return
 
+    # Check text for blacklisted words
     if message.text:
+        text_lower = message.text.lower()
         for word in blacklisted_words:
-            # Use regex to match whole words only
-            if re.search(rf"\\b{re.escape(word)}\\b", message.text, flags=re.IGNORECASE):
-                await message.delete()
+            word_lower = word.lower()
+            # Match whole word or punctuation attached
+            if re.search(rf"(^|\s|[^\w]){re.escape(word_lower)}($|\s|[^\w])", text_lower):
+                try:
+                    await message.delete()
+                except Exception:
+                    pass  # Ignore if bot can't delete
                 await take_action(client, message, blacklist_mode)
                 return
 
+    # Check stickers
     if message.sticker and message.sticker.file_unique_id in blacklisted_stickers:
-        await message.delete()
+        try:
+            await message.delete()
+        except Exception:
+            pass
         await take_action(client, message, blacklist_mode)
         return
 
 
 async def take_action(client: Client, message: Message, blacklist_mode: dict):
     try:
-        mode = blacklist_mode["mode"]
-        duration = blacklist_mode.get("duration", 0)
-        if duration == 0:
-            d = "Permanent"
-        else:
-            d = duration
+        mode = blacklist_mode.get("mode", "off")
+        duration = int(blacklist_mode.get("duration", 0))
+        d = "Permanent" if duration == 0 else duration
 
         log_message = None  # Initialize log_message
 
-        if mode == "del":
+        if mode == "off":
+            return
+
+        elif mode == "del":
             log_message = await format_log("Deleted Blacklisted Content", message.chat.title, admin=message.from_user.mention)
             await send_log(message.chat.id, log_message)
             return
 
         elif mode == "warn":
             warn_count = await add_warn(message.chat.id, message.from_user.id, "Blacklisted content", client)
+            warn_count = warn_count or 1  # Ensure it's not None
             await message.reply(f"{message.from_user.mention}, you've been warned. Current warnings: {warn_count}/{MAX_WARNS}.")
             log_message = await format_log("Warned User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
 
         elif mode == "ban":
             await client.ban_chat_member(message.chat.id, message.from_user.id)
-            await message.reply(f"{message.from_user.mention} 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝖻𝖺𝗇𝗇𝖾𝖽 𝖿𝗈𝗋 𝗎𝗌𝗂𝗇𝗀 𝖻𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍𝖾𝖽 𝖼𝗈𝗇𝗍𝖾𝗇𝗍.")
+            await message.reply(f"{message.from_user.mention} has been banned for using blacklisted content.")
             log_message = await format_log("Banned User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
 
         elif mode == "kick":
             await client.ban_chat_member(message.chat.id, message.from_user.id)
             await client.unban_chat_member(message.chat.id, message.from_user.id)
-            await message.reply(f"{message.from_user.mention} 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝗄𝗂𝗰𝗄𝖾𝖽 𝖿𝗈𝗋 𝗎𝗌𝗂𝗇𝗀 𝖻𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍𝖾𝖽 𝖼𝗈𝗇𝗍𝖾𝗇𝗍.")
+            await message.reply(f"{message.from_user.mention} has been kicked for using blacklisted content.")
             log_message = await format_log("Kicked User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
 
         elif mode == "mute":
@@ -244,13 +252,13 @@ async def take_action(client: Client, message: Message, blacklist_mode: dict):
                 message.from_user.id,
                 permissions=types.ChatPermissions(),
             )
-            await message.reply(f"{message.from_user.mention} 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝗆𝗎𝗍𝖾𝖽 𝖿𝗈𝗋 𝗎𝗌𝗂𝗇𝗀 𝖻𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍𝖾𝖽 𝖼𝗈𝗇𝗍𝖾𝗇𝗍.")
+            await message.reply(f"{message.from_user.mention} has been muted for using blacklisted content.")
             log_message = await format_log("Muted User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
 
         elif mode == "tban":
             until_date = int(time.time()) + duration
             await client.ban_chat_member(message.chat.id, message.from_user.id, until_date=until_date)
-            await message.reply(f"{message.from_user.mention} 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝗍𝖾𝗆𝗉𝗈𝗋𝖺𝗋𝗂𝗅𝗒 𝖻𝖺𝗇𝗇𝖾𝖽 𝖿𝗈𝗋 {duration} 𝗌𝖾𝖼𝗈𝗇𝖽𝗌 𝖿𝗈𝗋 𝗎𝗌𝗂𝗇𝗀 𝖻𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍𝖾𝖽 𝖼𝗈𝗇𝗍𝖾𝗇𝗍.")
+            await message.reply(f"{message.from_user.mention} has been temporarily banned for {d} seconds for using blacklisted content.")
             log_message = await format_log("Temporarily Banned User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
 
         elif mode == "tmute":
@@ -261,7 +269,7 @@ async def take_action(client: Client, message: Message, blacklist_mode: dict):
                 permissions=types.ChatPermissions(),
                 until_date=until_date,
             )
-            await message.reply(f"{message.from_user.mention} 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝗍𝖾𝗆𝗉𝗈𝗋𝖺𝗋𝗂𝗅𝗒 𝗆𝗎𝗍𝖾𝖽 𝖿𝗈𝗋 {𝖽} 𝗌𝖾𝖼𝗈𝗇𝖽𝗌 𝖿𝗈𝗋 𝗎𝗌𝗂𝗇𝗀 𝖻𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍𝖾𝖽 𝖼𝗈𝗇𝗍𝖾𝗇𝗍.")
+            await message.reply(f"{message.from_user.mention} has been temporarily muted for {d} seconds for using blacklisted content.")
             log_message = await format_log("Temporarily Muted User", message.chat.title, admin=message.from_user.mention, user=message.from_user.mention)
 
         if log_message:
@@ -271,7 +279,6 @@ async def take_action(client: Client, message: Message, blacklist_mode: dict):
         return
     except Exception as e:
         print(f"Error in take_action: {e}")
-
 
 __module__ = "𝖡𝗅𝖺𝖼𝗄𝗅𝗂𝗌𝗍"
 
