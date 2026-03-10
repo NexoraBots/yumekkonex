@@ -97,7 +97,7 @@ def get_main_menu_buttons():
 @save
 async def start_cmd(_, message: Message):
 
-    # Check for parameters passed with the start command
+    # Check for parameters
     if len(message.command) > 1 and message.command[1] == "help":
         await help_command(Client, message)
         return
@@ -115,24 +115,28 @@ async def start_cmd(_, message: Message):
     user_mention = message.from_user.mention(style="md")
     bot_mention = app.me.mention(style="md")
 
-    await message.reply_photo(
-        photo="https://files.catbox.moe/0esyec.jpg",
-        caption=(
-            f"**𝖧𝖾𝗒, {user_mention} 🍷**\n"
-            f"**𝖨 𝖺𝗆 {bot_mention} ♡ , 𝗒𝗈𝗎𝗋 𝗏𝖾𝗋𝗌𝖺𝗍𝗂𝗅𝖾 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝖻𝗈𝗍, "
-            f"𝖽𝖾𝗌𝗂𝗀𝗇𝖾𝖽 𝗍𝗈 𝗁𝖾𝗅𝗉 𝗒𝗈𝗎 𝗍𝖺𝗄𝖾 𝖼𝗈𝗇𝗍𝗋𝗈𝗅 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌 "
-            f"𝗐𝗂𝗍𝗁 𝖾𝖺𝗌𝖾 𝗎𝗌𝗂𝗇𝗀 𝗆𝗒 𝗉𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌!**\n\n"
-            f"[✨]({𝖼𝗈𝗇𝖿𝗂𝗀.𝖲𝖳𝖠𝖱𝖳_𝖨𝖬𝖦_𝖴𝖱𝖫}) **𝖶𝗁𝖺𝗍 𝖨 𝖢𝖺𝗇 𝖣𝗈:**\n"
-            f" • 𝖲𝖾𝖺𝗆𝗅𝖾𝗌𝗌 𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝗈𝖿 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌\n"
-            f" • 𝖯𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝗆𝗈𝖽𝖾𝗋𝖺𝗍𝗂𝗈𝗇 𝗍𝗈𝗈𝗅𝗌\n"
-            f" • 𝖥𝗎𝗇 𝖺𝗇𝖽 𝖾𝗇𝗀𝖺𝗀𝗂𝗇𝗀 𝖿𝖾𝖺𝗍𝗎𝗋𝖾𝗌\n\n"
-            f"📚 **𝖭𝖾𝖾𝖽 𝖧𝖾𝗅𝗉?**\n"
-            f"𝖢𝗅𝗂𝖼𝗄 𝗍𝗁𝖾 𝖧𝖾𝗅𝗉 𝖻𝗎𝗍𝗍𝗈𝗇 𝖻𝖾𝗅𝗈𝗐 𝗍𝗈 𝗀𝖾𝗍 𝖺𝗅𝗅 𝗍𝗁𝖾 𝖽𝖾𝗍𝖺𝗂𝗅𝗌 "
-            f"𝖺𝖻𝗈𝗎𝗍 𝗆𝗒 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌."
-        ),
-        reply_markup=get_main_menu_buttons()
+    text = (
+        f"**𝖧𝖾𝗒, {user_mention} 🍷**\n\n"
+        f"**𝖶𝖾𝗅𝖼𝗈𝗆𝖾! 𝖨'𝗆 {bot_mention} ♡ — 𝖺 𝗉𝗈𝗐𝖾𝗋𝖿𝗎𝗅 𝖳𝖾𝗅𝖾𝗀𝗋𝖺𝗆 "
+        f"𝗆𝖺𝗇𝖺𝗀𝖾𝗆𝖾𝗇𝗍 𝖻𝗈𝗍 𝖽𝖾𝗌𝗂𝗀𝗇𝖾𝖽 𝗍𝗈 𝗄𝖾𝖾𝗉 𝗒𝗈𝗎𝗋 𝗀𝗋𝗈𝗎𝗉𝗌 "
+        f"𝗈𝗋𝗀𝖺𝗇𝗂𝗓𝖾𝖽, 𝗌𝖾𝖼𝗎𝗋𝖾, 𝖺𝗇𝖽 𝖿𝗎𝗇.**\n\n"
+
+        f"[✨]({config.START_IMG_URL}) **𝖶𝗁𝖺𝗍 𝖨 𝖮𝖿𝖿𝖾𝗋:**\n"
+        f" • 𝖠𝖽𝗏𝖺𝗇𝖼𝖾𝖽 𝗆𝗈𝖽𝖾𝗋𝖺𝗍𝗂𝗈𝗇 𝗌𝗒𝗌𝗍𝖾𝗆\n"
+        f" • 𝖲𝗆𝖺𝗋𝗍 𝗀𝗋𝗈𝗎𝗉 𝗉𝗋𝗈𝗍𝖾𝖼𝗍𝗂𝗈𝗇 𝗍𝗈𝗈𝗅𝗌\n"
+        f" • 𝖴𝗌𝖾𝖿𝗎𝗅 𝗀𝗋𝗈𝗎𝗉 𝗎𝗍𝗂𝗅𝗂𝗍𝗂𝖾𝗌\n"
+        f" • 𝖨𝗇𝗍𝖾𝗋𝖺𝖼𝗍𝗂𝗏𝖾 𝖼𝗈𝗆𝗆𝗎𝗇𝗂𝗍𝗒 𝖿𝖾𝖺𝗍𝗎𝗋𝖾𝗌\n\n"
+
+        f"📚 **𝖭𝖾𝖾𝖽 𝖦𝗎𝗂𝖽𝖺𝗇𝖼𝖾?**\n"
+        f"**𝖯𝗋𝖾𝗌𝗌 𝗍𝗁𝖾 𝖧𝖾𝗅𝗉 𝖻𝗎𝗍𝗍𝗈𝗇 𝖻𝖾𝗅𝗈𝗐 𝗍𝗈 "
+        f"𝖾𝗑𝗉𝗅𝗈𝗋𝖾 𝖺𝗅𝗅 𝗆𝗒 𝗆𝗈𝖽𝗎𝗅𝖾𝗌 𝖺𝗇𝖽 𝖼𝗈𝗆𝗆𝖺𝗇𝖽𝗌.**"
     )
 
+    await message.reply_text(
+        text,
+        reply_markup=get_main_menu_buttons(),
+        disable_web_page_preview=False
+    )
 @app.on_message(filters.command("help", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
 @save
