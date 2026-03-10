@@ -49,7 +49,7 @@ async def calculator(client: Client, message: Message):
         f"**𝖱𝖾𝗌𝗎𝗅𝗍:** `{result}`"
     )
 
-__MODULE__ = "𝖢𝖺𝗅𝖼𝗎𝗅𝖺𝗍𝗈𝗋"
+__module__ = "𝖢𝖺𝗅𝖼𝗎𝗅𝖺𝗍𝗈𝗋"
 
 __HELP__ = """
 𝖯𝖾𝗋𝖿𝗈𝗋𝗆 𝗆𝖺𝗍𝗁𝖾𝗆𝖺𝗍𝗂𝖼𝖺𝗅 𝖼𝖺𝗅𝖼𝗎𝗅𝖺𝗍𝗂𝗈𝗇𝗌.
