@@ -1823,6 +1823,51 @@ Selected text case in this group: {cs}"""
 
 
 
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from Yumeko import app
+from config import config
+from Yumeko.decorator.save import save
+from Yumeko.decorator.errors import error
+import aiohttp
+
+# URL of your Flask news API
+ANIME_NEWS_API = "https://yumekkonex.onrender.com"  # Replace with deployed URL if not local
+
+async def fetch_anime_news():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(ANIME_NEWS_API) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                # Flask API returns single news item as {"title": ..., "post_url": ..., "image": ..., "info": ...}
+                return data
+            return None
+
+@app.on_message(filters.command("animenews", prefixes=config.COMMAND_PREFIXES))
+@error
+@save
+async def anime_news(client: Client, message: Message):
+    news_item = await fetch_anime_news()
+    if not news_item:
+        await message.reply_text("𝖭𝗈 𝗇𝖾𝗐𝗌 𝖺𝗏𝖺𝗂𝗅𝖺𝖻𝗅𝖾 𝗋𝗂𝗀𝗁𝗍 𝗇𝗈𝗐.")
+        return
+
+    text = f"🌟 **Latest Anime News** 🌟\n\n"
+    text += f"**{news_item['title']}**\n\n"
+    text += f"{news_item['info']}\n\n"
+    text += f"[Read More]({news_item['post_url']})"
+
+    buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Read Full Article", url=news_item['post_url'])]
+    ])
+
+    await message.reply_photo(
+        photo=news_item['image'],
+        caption=text,
+        parse_mode="Markdown",
+        reply_markup=buttons
+    )
+
 __module__ = "𝖠𝗇𝗂𝗆𝖾"
 
 
