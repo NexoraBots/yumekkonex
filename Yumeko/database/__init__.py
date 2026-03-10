@@ -82,6 +82,10 @@ async def setup_indexes():
     await nightmode_collection.create_index("nightmode_enabled")
     await info_collection.create_index("user_id", unique=True)
     await warnings_collection.create_index([("chat_id", 1), ("user_id", 1)], unique=True)
+    await db.ChatRanks.create_index([("chat_id", 1), ("user_id", 1)], unique=True)
+    await db.ChatRanks.create_index("total")
+    await db.GroupStats.create_index("chat_id", unique=True)
+    await db.GroupStats.create_index("messages")
     
 
     print("Indexes Setuped")
