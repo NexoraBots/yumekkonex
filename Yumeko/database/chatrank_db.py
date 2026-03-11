@@ -1,12 +1,24 @@
 from Yumeko.database import db
 from datetime import datetime
+import pytz
+
+IST = pytz.timezone("Asia/Kolkata")
 
 chatrank_collection = db.ChatRanks
 groupstats_collection = db.GroupStats
 
+
+def get_today():
+    return datetime.now(IST).strftime("%Y-%m-%d")
+
+
+def get_week():
+    return datetime.now(IST).strftime("%Y-%W")
+
+
 async def get_user_today(chat_id: int, user_id: int):
 
-    today = datetime.utcnow().strftime("%Y-%m-%d")
+    today = get_today()
 
     data = await chatrank_collection.find_one(
         {"chat_id": chat_id, "user_id": user_id}
@@ -20,7 +32,7 @@ async def get_user_today(chat_id: int, user_id: int):
 
 async def get_user_week(chat_id: int, user_id: int):
 
-    week = datetime.utcnow().strftime("%Y-%W")
+    week = get_week()
 
     data = await chatrank_collection.find_one(
         {"chat_id": chat_id, "user_id": user_id}
@@ -42,11 +54,12 @@ async def get_user_total(chat_id: int, user_id: int):
         return 0
 
     return data.get("total", 0)
-    
+
+
 async def add_message(chat_id: int, user_id: int, name: str, username: str | None):
 
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    week = datetime.utcnow().strftime("%Y-%W")
+    today = get_today()
+    week = get_week()
 
     await chatrank_collection.update_one(
         {"chat_id": chat_id, "user_id": user_id},
@@ -70,10 +83,11 @@ async def add_message(chat_id: int, user_id: int, name: str, username: str | Non
         upsert=True
     )
 
+
 async def get_top_users(chat_id: int, mode: str = "total", limit: int = 10):
 
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    week = datetime.utcnow().strftime("%Y-%W")
+    today = get_today()
+    week = get_week()
 
     if mode == "today":
         key = f"daily.{today}"
@@ -85,6 +99,7 @@ async def get_top_users(chat_id: int, mode: str = "total", limit: int = 10):
     cursor = chatrank_collection.find({"chat_id": chat_id}).sort(key, -1).limit(limit)
 
     users = []
+
     async for u in cursor:
 
         if mode == "today":
@@ -105,6 +120,7 @@ async def get_top_users(chat_id: int, mode: str = "total", limit: int = 10):
 
     return users
 
+
 async def get_group_total(chat_id: int):
 
     data = await groupstats_collection.find_one({"chat_id": chat_id})
@@ -114,9 +130,13 @@ async def get_group_total(chat_id: int):
 
     return data.get("messages", 0)
 
-async def get_top_groups(limit: int = 10):
 
-    cursor = groupstats_collection.find().sort("messages", -1).limit(limit)
+async def get_top_groups(mode="total", limit: int = 10):
+
+    if mode == "total":
+        cursor = groupstats_collection.find().sort("messages", -1).limit(limit)
+    else:
+        cursor = groupstats_collection.find().sort("messages", -1).limit(limit)
 
     groups = []
 
@@ -129,6 +149,7 @@ async def get_top_groups(limit: int = 10):
         )
 
     return groups
+
 
 async def get_group_rank(chat_id: int):
 
@@ -144,3 +165,39 @@ async def get_group_rank(chat_id: int):
         rank += 1
 
     return None
+
+
+# Cleanup old daily data (keep last 7 days)
+async def cleanup_daily():
+
+    async for user in chatrank_collection.find():
+
+        daily = user.get("daily", {})
+
+        if len(daily) > 7:
+
+            keys = sorted(daily.keys())[:-7]
+
+            for k in keys:
+                await chatrank_collection.update_one(
+                    {"_id": user["_id"]},
+                    {"$unset": {f"daily.{k}": ""}}
+                )
+
+
+# Cleanup old weekly data (keep last 4 weeks)
+async def cleanup_weekly():
+
+    async for user in chatrank_collection.find():
+
+        weekly = user.get("weekly", {})
+
+        if len(weekly) > 4:
+
+            keys = sorted(weekly.keys())[:-4]
+
+            for k in keys:
+                await chatrank_collection.update_one(
+                    {"_id": user["_id"]},
+                    {"$unset": {f"weekly.{k}": ""}}
+                )
