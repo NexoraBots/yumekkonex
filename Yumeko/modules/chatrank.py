@@ -215,35 +215,65 @@ async def groupstats(client, message):
     )
 
 # Global chat ranks
-
+# Global chat ranks with buttons
 @app.on_message(filters.command("chatranks", prefixes=config.COMMAND_PREFIXES) & filters.private)
 @error
 @save
 async def chatranks(client, message):
+    await send_chatranks(client, message, mode="total")
 
-    groups = await get_top_groups()
 
-    text = "🏆 **Top Groups By Activity**\n\n"
-
+# Helper function to build global leaderboard text
+async def build_global_leaderboard(mode="total"):
+    groups = await get_top_groups(mode)  # Make sure get_top_groups supports a mode parameter
+    titles = {
+        "total": "🏆 **Top Groups By Activity • Overall**",
+        "today": "🏆 **Top Groups By Activity • Today**",
+        "week": "🏆 **Top Groups By Activity • Weekly**"
+    }
+    text = f"{titles.get(mode,'🏆 Top Groups By Activity')}\n\n"
     rank = 1
-
     for g in groups:
-
         chat_id = g["chat_id"]
         msgs = g["messages"]
-
         try:
-            chat = await client.get_chat(chat_id)
+            chat = await app.get_chat(chat_id)
             name = chat.title
         except:
             name = "Unknown Chat"
-
         text += f"{rank}. {name} ⋟ [ ✉️ {msgs:,} messages ]\n"
-
         rank += 1
+    return text
 
-    await message.reply_text(text)
 
+# Helper function to send global leaderboard with buttons
+async def send_chatranks(client, message_or_query, mode="total", is_query=False):
+    text = await build_global_leaderboard(mode)
+    buttons = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("Overall", callback_data=f"grouprank_total"),
+                InlineKeyboardButton("Today", callback_data=f"grouprank_today"),
+                InlineKeyboardButton("Weekly", callback_data=f"grouprank_week"),
+            ],
+            [
+                InlineKeyboardButton("➕ Add Me To Your Group", url="https://t.me/YumekkoRoBot?startgroup=true")
+            ]
+        ]
+    )
+
+    if is_query:
+        await message_or_query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
+        await message_or_query.answer()
+    else:
+        await message_or_query.reply_text(text, reply_markup=buttons, disable_web_page_preview=True)
+
+
+# Callback buttons for global leaderboard
+@app.on_callback_query(filters.regex("^grouprank_"))
+async def grouprank_buttons(client, query: CallbackQuery):
+    mode = query.data.split("_")[1]  # total / today / week
+    await send_chatranks(client, query, mode=mode, is_query=True)
 
 async def check_achievements(client, message):
 
