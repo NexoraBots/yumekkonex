@@ -36,6 +36,43 @@ def load_all_modules():
         load_modules_from_folder(folder)
     log.info(f"Loaded {len(LOADED_MODULES)} modules: {', '.join(sorted(LOADED_MODULES.keys()))}")
 
+import re
+from Yumeko.decorator.errors import error
+from Yumeko.decorator.save import save
+
+@app.on_message(filters.command("commands", config.COMMAND_PREFIXES) & filters.private)
+@error
+@save
+async def commands_cmd(_, message: Message):
+    # Owner check
+    if message.from_user.id != config.OWNER_ID:
+        await message.reply_text("❌ You are not authorized to use this command.")
+        return
+
+    all_commands = []
+
+    # Extract commands from each module's __help__
+    for module_name, help_text in LOADED_MODULES.items():
+        # Regex: find anything starting with / and followed by letters/numbers/_ 
+        commands_found = re.findall(r"(\/[^\s:]+)", help_text)
+        if commands_found:
+            all_commands.extend(commands_found)
+
+    if not all_commands:
+        await message.reply_text("⚠️ No commands found in loaded modules.")
+        return
+
+    # Remove duplicates and sort
+    all_commands = sorted(set(all_commands))
+
+    # Split into chunks if text is too long for Telegram (4096 char limit)
+    TEXT_LIMIT = 4096
+    msg_text = "📜 **Owner Commands List:**\n\n" + "\n".join(all_commands)
+    messages = [msg_text[i:i + TEXT_LIMIT] for i in range(0, len(msg_text), TEXT_LIMIT)]
+
+    for chunk in messages:
+        await message.reply_text(chunk)
+
 # Pagination Logic
 def get_paginated_buttons(page=1, items_per_page=15):
     modules = sorted(LOADED_MODULES.keys())
