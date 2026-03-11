@@ -96,8 +96,13 @@ KARMA_NEGATIVE_GROUP = 14
 KARMA_POSITIVE_GROUP = 15
 JOIN_UPDATE_GROUP = 16
 
-
 # ---------------- SCHEDULER TASKS ---------------- #
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import logging
+
+log = logging.getLogger(__name__)
+scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
 
 async def cleanup_chatranks():
     try:
@@ -107,8 +112,14 @@ async def cleanup_chatranks():
         log.info("ChatRank cleanup completed")
     except Exception as e:
         log.error(f"ChatRank cleanup failed: {e}")
-        
+
+
 def setup_scheduler():
+    """
+    Adds all scheduled jobs to the scheduler WITHOUT starting it.
+    Call scheduler.start() separately in __main__ before starting the bot.
+    """
+
     # Daily cleanup at 1 AM IST
     scheduler.add_job(
         cleanup_chatranks,
@@ -119,6 +130,7 @@ def setup_scheduler():
     )
 
     # Daily leaderboard at 12 AM IST
+    from Yumeko.modules.chatranks import send_daily_leaderboard  # import here to avoid circular imports
     scheduler.add_job(
         send_daily_leaderboard,
         "cron",
@@ -137,5 +149,4 @@ def setup_scheduler():
         id="weekly_leaderboard"
     )
 
-    scheduler.start()
-    log.info("Scheduler started")
+    log.info("Scheduler jobs have been added (scheduler not started yet)")
