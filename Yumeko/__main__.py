@@ -287,6 +287,7 @@ if __name__ == "__main__":
     try:
         app.start()
         telebot.start(bot_token=config.BOT_TOKEN)
+
         initialize_services()
         ensure_owner_is_hokage()
         edit_restart_message()
@@ -296,25 +297,66 @@ if __name__ == "__main__":
         loop = asyncio.get_event_loop()
 
         async def initialize_async_components():
+
             await setup_indexes()
+
             if await is_database_empty():
                 log.warning("Database is empty. Attempting to restore from the last backup...")
-                # try :
+                # try:
                 #     restore_status = await restore_from_last_backup()
                 #     log.info(restore_status)
                 # except:
                 #     pass
             else:
                 log.info("Database is not empty. Proceeding with startup.")
+
+            # ---------------- Scheduler Jobs ---------------- #
+
+            from Yumeko.database.chatrank_db import cleanup_daily, cleanup_weekly
+
+            async def chatrank_cleanup():
+                await cleanup_daily()
+                await cleanup_weekly()
+                log.info("ChatRank cleanup completed")
+
+            # Daily cleanup 1 AM IST
+            scheduler.add_job(
+                chatrank_cleanup,
+                "cron",
+                hour=1,
+                minute=0,
+                id="chatrank_cleanup"
+            )
+
+            # Optional backup every 6 hours
+            # scheduler.add_job(
+            #     backup_database,
+            #     "interval",
+            #     hours=6,
+            #     id="db_backup"
+            # )
+
             scheduler.start()
-            log.info("Async components initialized.")
+
+            log.info("Scheduler started successfully")
+
+            # ------------------------------------------------- #
 
             bot_details = await app.get_me()
-            log.info(f"Bot Configured: Name: {bot_details.first_name}, ID: {bot_details.id}, Username: @{bot_details.username}")
+
+            log.info(
+                f"Bot Configured: "
+                f"Name: {bot_details.first_name}, "
+                f"ID: {bot_details.id}, "
+                f"Username: @{bot_details.username}"
+            )
 
         loop.run_until_complete(initialize_async_components())
+
         ptb.run_polling(timeout=15, drop_pending_updates=True)
+
         log.info("Bot started. Press Ctrl+C to stop.")
+
         idle()
 
     except Exception as e:
