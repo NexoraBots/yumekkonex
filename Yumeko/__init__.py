@@ -100,24 +100,15 @@ JOIN_UPDATE_GROUP = 16
 # ---------------- SCHEDULER TASKS ---------------- #
 
 async def cleanup_chatranks():
-    """
-    Cleanup old chatrank records to keep database small
-    """
     try:
         from Yumeko.database.chatrank_db import cleanup_daily, cleanup_weekly
-
         await cleanup_daily()
         await cleanup_weekly()
-
         log.info("ChatRank cleanup completed")
-
     except Exception as e:
         log.error(f"ChatRank cleanup failed: {e}")
-
-
-# Register scheduled jobs
+        
 def setup_scheduler():
-
     # Daily cleanup at 1 AM IST
     scheduler.add_job(
         cleanup_chatranks,
@@ -125,6 +116,25 @@ def setup_scheduler():
         hour=1,
         minute=0,
         id="chatrank_cleanup"
+    )
+
+    # Daily leaderboard at 12 AM IST
+    scheduler.add_job(
+        send_daily_leaderboard,
+        "cron",
+        hour=0,
+        minute=0,
+        id="daily_leaderboard"
+    )
+
+    # Weekly leaderboard at Sunday 11:59 PM IST
+    scheduler.add_job(
+        lambda: send_daily_leaderboard(mode="week"),
+        "cron",
+        day_of_week="sun",
+        hour=23,
+        minute=59,
+        id="weekly_leaderboard"
     )
 
     scheduler.start()
