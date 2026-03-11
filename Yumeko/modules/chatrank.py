@@ -70,13 +70,17 @@ async def build_leaderboard(chat_id, mode="total"):
 
         rank += 1
 
-    total_msgs = await get_group_total(chat_id)
+    # Use correct total based on mode
+    if mode == "today":
+        total_msgs = await get_group_today(chat_id)
+    elif mode == "week":
+        total_msgs = await get_group_week(chat_id)
+    else:
+        total_msgs = await get_group_total(chat_id)
 
     text += f"\n✉️ Total messages: {total_msgs:,}"
 
-    return text
-
-
+    return text 
 # Ranking command
 @app.on_message(filters.command("ranking", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
