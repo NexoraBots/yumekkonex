@@ -39,39 +39,62 @@ def load_all_modules():
 import re
 from Yumeko.decorator.errors import error
 from Yumeko.decorator.save import save
+import re
+from Yumeko.decorator.errors import error
+from Yumeko.decorator.save import save
+from pyrogram import filters
+from pyrogram.types import Message
 
 @app.on_message(filters.command("commands", config.COMMAND_PREFIXES) & filters.private)
 @error
 @save
 async def commands_cmd(_, message: Message):
-    # Owner check
+    # Owner-only check
     if message.from_user.id != config.OWNER_ID:
         await message.reply_text("❌ You are not authorized to use this command.")
         return
 
-    all_commands = []
+    command_list = []
 
-    # Extract commands from each module's __help__
+    # Extract commands and short description from each module's __help__
     for module_name, help_text in LOADED_MODULES.items():
-        # Regex: find anything starting with / and followed by letters/numbers/_ 
-        commands_found = re.findall(r"(\/[^\s:]+)", help_text)
-        if commands_found:
-            all_commands.extend(commands_found)
+        for line in help_text.splitlines():
+            match = re.match(r"\s*(\/[^\s:]+)\s*:\s*(.*)", line)
+            if match:
+                command_name = match.group(1).lstrip("/")  # Remove leading '/'
+                description = match.group(2).strip()
+                # Limit description to first 80 characters
+                if len(description) > 80:
+                    description = description[:77] + "..."
+                command_list.append(f"{command_name} - {description}")
 
-    if not all_commands:
+    if not command_list:
         await message.reply_text("⚠️ No commands found in loaded modules.")
         return
 
-    # Remove duplicates and sort
-    all_commands = sorted(set(all_commands))
+    # Sort commands alphabetically
+    command_list = sorted(command_list)
 
-    # Split into chunks if text is too long for Telegram (4096 char limit)
+    # Telegram text limit
     TEXT_LIMIT = 4096
-    msg_text = "📜 **Owner Commands List:**\n\n" + "\n".join(all_commands)
-    messages = [msg_text[i:i + TEXT_LIMIT] for i in range(0, len(msg_text), TEXT_LIMIT)]
+    header = "Owner Commands List:\n\n"
+    messages = []
+    current_msg = header
 
-    for chunk in messages:
-        await message.reply_text(chunk)
+    for cmd in command_list:
+        # +1 for newline
+        if len(current_msg) + len(cmd) + 1 > TEXT_LIMIT:
+            messages.append(current_msg)
+            current_msg = ""
+        current_msg += cmd + "\n"
+
+    # Append remaining text
+    if current_msg:
+        messages.append(current_msg)
+
+    # Send all pages
+    for msg in messages:
+        await message.reply_text(msg)
 
 # Pagination Logic
 def get_paginated_buttons(page=1, items_per_page=15):
