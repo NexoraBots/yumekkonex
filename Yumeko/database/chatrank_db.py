@@ -61,6 +61,7 @@ async def add_message(chat_id: int, user_id: int, name: str, username: str | Non
     today = get_today()
     week = get_week()
 
+    # Update user stats
     await chatrank_collection.update_one(
         {"chat_id": chat_id, "user_id": user_id},
         {
@@ -77,12 +78,18 @@ async def add_message(chat_id: int, user_id: int, name: str, username: str | Non
         upsert=True
     )
 
+    # Update group stats
     await groupstats_collection.update_one(
         {"chat_id": chat_id},
-        {"$inc": {"messages": 1}},
+        {
+            "$inc": {
+                "messages": 1,
+                f"daily.{today}": 1,
+                f"weekly.{week}": 1
+            }
+        },
         upsert=True
     )
-
 
 async def get_top_users(chat_id: int, mode: str = "total", limit: int = 10):
 
@@ -130,26 +137,62 @@ async def get_group_total(chat_id: int):
 
     return data.get("messages", 0)
 
+async def get_group_today(chat_id: int):
+
+    today = get_today()
+
+    data = await groupstats_collection.find_one({"chat_id": chat_id})
+
+    if not data:
+        return 0
+
+    return data.get("daily", {}).get(today, 0)
+
+async def get_group_week(chat_id: int):
+
+    week = get_week()
+
+    data = await groupstats_collection.find_one({"chat_id": chat_id})
+
+    if not data:
+        return 0
+
+    return data.get("weekly", {}).get(week, 0)
+
 
 async def get_top_groups(mode="total", limit: int = 10):
 
-    if mode == "total":
-        cursor = groupstats_collection.find().sort("messages", -1).limit(limit)
+    today = get_today()
+    week = get_week()
+
+    if mode == "today":
+        key = f"daily.{today}"
+    elif mode == "week":
+        key = f"weekly.{week}"
     else:
-        cursor = groupstats_collection.find().sort("messages", -1).limit(limit)
+        key = "messages"
+
+    cursor = groupstats_collection.find().sort(key, -1).limit(limit)
 
     groups = []
 
     async for g in cursor:
+
+        if mode == "today":
+            msgs = g.get("daily", {}).get(today, 0)
+        elif mode == "week":
+            msgs = g.get("weekly", {}).get(week, 0)
+        else:
+            msgs = g.get("messages", 0)
+
         groups.append(
             {
                 "chat_id": g["chat_id"],
-                "messages": g.get("messages", 0)
+                "messages": msgs
             }
         )
 
     return groups
-
 
 async def get_group_rank(chat_id: int):
 
