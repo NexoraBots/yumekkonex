@@ -194,22 +194,27 @@ async def get_top_groups(mode="total", limit: int = 10):
 
     return groups
 
-async def get_group_rank(chat_id: int):
+async def get_top_groups(mode: str = "total", limit: int = 10):
+    today = get_today()
+    week = get_week()
 
-    groups = groupstats_collection.find().sort("messages", -1)
+    key_map = {
+        "today": f"daily.{today}",
+        "week": f"weekly.{week}",
+        "total": "messages"
+    }
 
-    rank = 1
+    key = key_map.get(mode, "messages")
+    cursor = groupstats_collection.find().sort(key, -1).limit(limit)
 
-    async for g in groups:
-
-        if g["chat_id"] == chat_id:
-            return rank
-
-        rank += 1
-
-    return None
-
-
+    groups = []
+    async for g in cursor:
+        msgs = g.get("daily", {}).get(today, 0) if mode == "today" else \
+               g.get("weekly", {}).get(week, 0) if mode == "week" else \
+               g.get("messages", 0)
+        groups.append({"chat_id": g["chat_id"], "messages": msgs})
+    return groups
+    
 # Cleanup old daily data (keep last 7 days)
 async def cleanup_daily():
 
