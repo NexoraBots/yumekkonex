@@ -283,32 +283,34 @@ async def restore_from_last_backup():
 
 if __name__ == "__main__":
     load_all_modules()
-    
-    loop = asyncio.get_event_loop()
-    
-    async def main():
-        await app.start()
-        await telebot.start(bot_token=config.BOT_TOKEN)
-        await initialize_services()
+
+    try:
+        app.start()
+        telebot.start(bot_token=config.BOT_TOKEN)
+        initialize_services()
         ensure_owner_is_hokage()
         edit_restart_message()
         clear_downloads_folder()
         notify_startup()
 
-        await setup_indexes()
-        if await is_database_empty():
-            log.warning("Database empty. Restore needed.")
+        loop = asyncio.get_event_loop()
 
-        # Scheduler jobs
-        scheduler.add_job(cleanup_chatranks, "cron", hour=1, minute=0)
-        scheduler.start()
+        async def initialize_async_components():
+            await setup_indexes()
+            if await is_database_empty():
+                log.warning("Database is empty. Attempting to restore from the last backup...")
+            else:
+                log.info("Database is not empty. Proceeding with startup.")
+            scheduler.start()
+            log.info("Async components initialized.")
 
-        bot_details = await app.get_me()
-        log.info(f"Bot Configured: Name: {bot_details.first_name}, ID: {bot_details.id}, Username: @{bot_details.username}")
+            bot_details = await app.get_me()
+            log.info(f"Bot Configured: Name: {bot_details.first_name}, ID: {bot_details.id}, Username: @{bot_details.username}")
 
-        await ptb.initialize()
-        asyncio.create_task(ptb.updater.start_polling())
+        loop.run_until_complete(initialize_async_components())
+        ptb.run_polling(timeout=15, drop_pending_updates=True)
+        log.info("Bot started. Press Ctrl+C to stop.")
+        idle()
 
-    loop.run_until_complete(main())
-    log.info("Bot started. Press Ctrl+C to stop.")
-    loop.run_forever()
+    except Exception as e:
+        log.exception(e)
