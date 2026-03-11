@@ -311,4 +311,4 @@ if __name__ == "__main__":
 
     loop.run_until_complete(main())
     log.info("Bot started. Press Ctrl+C to stop.")
-    loop.run_forever())
+    loop.run_forever()
