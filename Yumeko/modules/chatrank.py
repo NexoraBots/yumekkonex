@@ -234,34 +234,33 @@ async def check_achievements(client, message):
     user_total = await get_user_total(chat.id, user.id)
     group_total = await get_group_total(chat.id)
 
-    # Daily
-    if await pattern_hit(daily, 500, 500):
+    # Daily achievement
+    if daily != 0 and daily % 500 == 0:
         await message.reply_text(
             f"**Daily Achievement** ⋟ [{user.first_name}](tg://user?id={user.id}) reached [ {daily:,} messages today ]",
             disable_web_page_preview=True
         )
 
-    # Weekly
-    if await pattern_hit(weekly, 1000, 2500):
+    # Weekly achievement
+    if weekly != 0 and weekly % 2500 == 0:
         await message.reply_text(
             f"**Weekly Achievement** ⋟ [{user.first_name}](tg://user?id={user.id}) reached [ {weekly:,} messages this week ]",
             disable_web_page_preview=True
         )
 
-    # User Total
-    if await pattern_hit(user_total, 1000, 4000):
+    # User total achievement
+    if user_total != 0 and user_total % 4000 == 0:
         await message.reply_text(
             f"**Overall Achievement** ⋟ [{user.first_name}](tg://user?id={user.id}) reached [ {user_total:,} total messages ]",
             disable_web_page_preview=True
         )
 
-    # Group Total
-    if await pattern_hit(group_total, 1000, 4000):
+    # Group achievement
+    if group_total != 0 and group_total % 4000 == 0:
         await message.reply_text(
             f"**Group Achievement** ⋟ {chat.title} reached [ {group_total:,} total messages ]",
             disable_web_page_preview=True
         )
-
 
 __module__ = "𝖢𝗁𝖺𝗍 𝖱𝖺𝗇𝗄𝗌"
 
