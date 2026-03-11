@@ -282,54 +282,39 @@ async def restore_from_last_backup():
     return response
 
 if __name__ == "__main__":
-    import asyncio
-    from Yumeko import scheduler, setup_scheduler
-    from Yumeko import app, log
-    from config import config
-
-    # Load all modules first
     load_all_modules()
 
     try:
-        # Start Pyrogram client (async)
         app.start()
-
-        # Start telebot (if you still need it)
         telebot.start(bot_token=config.BOT_TOKEN)
-
-        # Run sync initialization tasks
         initialize_services()
         ensure_owner_is_hokage()
         edit_restart_message()
         clear_downloads_folder()
         notify_startup()
 
-        # Setup event loop for async tasks
         loop = asyncio.get_event_loop()
 
         async def initialize_async_components():
             await setup_indexes()
             if await is_database_empty():
                 log.warning("Database is empty. Attempting to restore from the last backup...")
+                # try :
+                #     restore_status = await restore_from_last_backup()
+                #     log.info(restore_status)
+                # except:
+                #     pass
             else:
                 log.info("Database is not empty. Proceeding with startup.")
-
-            # ---------------- Scheduler ---------------- #
-            setup_scheduler()  # add jobs only
-            scheduler.start()  # start the scheduler safely
-            log.info("Scheduler started and async components initialized.")
+            scheduler.start()
+            log.info("Async components initialized.")
 
             bot_details = await app.get_me()
             log.info(f"Bot Configured: Name: {bot_details.first_name}, ID: {bot_details.id}, Username: @{bot_details.username}")
 
-        # Run async initialization
         loop.run_until_complete(initialize_async_components())
-
-        # Start python-telegram-bot polling (if needed)
         ptb.run_polling(timeout=15, drop_pending_updates=True)
         log.info("Bot started. Press Ctrl+C to stop.")
-
-        # Keep the app running
         idle()
 
     except Exception as e:
