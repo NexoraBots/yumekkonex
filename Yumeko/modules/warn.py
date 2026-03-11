@@ -147,6 +147,56 @@ async def unwarn_user(client: Client, message: Message):
     except ChatAdminRequired:
         await message.reply("Admin rights required.")
 
+from pyrogram.types import CallbackQuery
+
+
+@app.on_callback_query(filters.regex(r"^warn_(increase|decrease|delete)_(\d+)$"))
+@error
+async def warn_buttons(client: Client, query: CallbackQuery):
+
+    action = query.data.split("_")[1]
+    user_id = int(query.data.split("_")[2])
+    chat_id = query.message.chat.id
+
+    if action == "increase":
+        warn_count = await warn_db.add_warn(chat_id, user_id, "Manual warn", client)
+
+    elif action == "decrease":
+        warn_count = await warn_db.remove_warn(chat_id, user_id)
+
+    elif action == "delete":
+        await warn_db.clear_warns(chat_id, user_id)
+        warn_count = 0
+
+    MAX_WARNS = await warn_db.get_warn_limit(chat_id)
+
+    try:
+        user = await client.get_users(user_id)
+        mention = user.mention
+    except:
+        mention = f"`{user_id}`"
+
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("-1", callback_data=f"warn_decrease_{user_id}"),
+            InlineKeyboardButton("+1", callback_data=f"warn_increase_{user_id}")
+        ],
+        [
+            InlineKeyboardButton("Clear Warns", callback_data=f"warn_delete_{user_id}")
+        ],
+        [
+            InlineKeyboardButton("🗑", callback_data="delete")
+        ]
+    ])
+
+    await query.message.edit_text(
+        f"**𝖶𝖺𝗋𝗇𝗂𝗇𝗀 𝖴𝗉𝖽𝖺𝗍𝖾𝖽:** {mention}\n"
+        f"**𝖢𝗎𝗋𝗋𝖾𝗇𝗍 𝖶𝖺𝗋𝗇𝗌:** {warn_count}/{MAX_WARNS}",
+        reply_markup=keyboard
+    )
+
+    await query.answer()
+
 
 __module__ = "𝖶𝖺𝗋𝗇"
 
