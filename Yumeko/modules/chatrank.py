@@ -11,7 +11,12 @@ from Yumeko.database.chatrank_db import (
     get_group_total,
     get_top_groups
 )
-
+from Yumeko.database.chatrank_db import (
+    get_user_today,
+    get_user_week,
+    get_user_total,
+    get_group_total
+)
 async def pattern_hit(value: int, start: int, step: int):
     if value < start:
         return False
@@ -218,13 +223,6 @@ async def chatranks(client, message):
 
 
 async def check_achievements(client, message):
-
-    from Yumeko.database.chatrank_db import (
-        get_user_today,
-        get_user_week,
-        get_user_total,
-        get_group_total
-    )
 
     user = message.from_user
     chat = message.chat
