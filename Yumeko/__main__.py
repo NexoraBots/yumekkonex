@@ -283,7 +283,7 @@ async def restore_from_last_backup():
 
 if __name__ == "__main__":
     import asyncio
-    from Yumeko.scheduler import scheduler, setup_scheduler
+    from Yumeko import scheduler, setup_scheduler
     from Yumeko import app, log
     from config import config
 
