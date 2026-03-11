@@ -8,14 +8,13 @@ from Yumeko.decorator.errors import error
 from Yumeko.database.chatrank_db import (
     add_message,
     get_top_users,
+    get_top_groups,
     get_group_total,
-    get_top_groups
-)
-from Yumeko.database.chatrank_db import (
+    get_group_today,
+    get_group_week,
     get_user_today,
     get_user_week,
-    get_user_total,
-    get_group_total
+    get_user_total
 )
 async def pattern_hit(value: int, start: int, step: int):
     if value < start:
@@ -139,7 +138,6 @@ async def rank_buttons(client, query: CallbackQuery):
     )
 
     await query.answer()
-
 @app.on_message(filters.command("groupstats", prefixes=config.COMMAND_PREFIXES) & filters.group)
 @error
 @save
@@ -148,11 +146,15 @@ async def groupstats(client, message):
     chat = message.chat
 
     members = await client.get_chat_members_count(chat.id)
-    msgs = await get_group_total(chat.id)
 
-    groups_total = await get_top_groups("total")
-    groups_today = await get_top_groups("today")
-    groups_week = await get_top_groups("week")
+    total_msgs = await get_group_total(chat.id)
+    today_msgs = await get_group_today(chat.id)
+    week_msgs = await get_group_week(chat.id)
+
+    # Group ranks
+    groups_total = await get_top_groups()
+    groups_today = await get_top_groups()
+    groups_week = await get_top_groups()
 
     overall_rank = "N/A"
     today_rank = "N/A"
@@ -173,13 +175,34 @@ async def groupstats(client, message):
             week_rank = i
             break
 
+    # Champion user (top chatter overall)
+    champion = "None"
+
+    top_users = await get_top_users(chat.id, "total", limit=1)
+
+    if top_users:
+        champ = top_users[0]
+        name = champ["name"]
+        uid = champ["user_id"]
+        msgs = champ["messages"]
+
+        champion = f"{name} [`{uid}`] ⋟ {msgs:,} msgs"
+
     text = (
         "**📊 Group Statistics**\n\n"
         f"Name ⋟ {chat.title}\n"
         f"Chat ID ⋟ `{chat.id}`\n"
         f"Members ⋟ {members:,}\n"
-        f"Total Messages ⋟ {msgs:,}\n"
         f"Chat Type ⋟ {chat.type}\n\n"
+
+        f"✉️ Message Stats\n"
+        f"Today ⋟ {today_msgs:,}\n"
+        f"Weekly ⋟ {week_msgs:,}\n"
+        f"Overall ⋟ {total_msgs:,}\n\n"
+
+        f"👑 Champion\n"
+        f"{champion}\n\n"
+
         f"🏆 Group Rank\n"
         f"Overall ⋟ #{overall_rank}\n"
         f"Today ⋟ #{today_rank}\n"
