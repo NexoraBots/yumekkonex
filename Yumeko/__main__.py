@@ -134,21 +134,34 @@ def get_paginated_buttons(page=1, items_per_page=15):
         ])
 
     return InlineKeyboardMarkup(button_rows)
-
 # Helper to generate the main menu buttons
 def get_main_menu_buttons():
     buttons = [
         [
             InlineKeyboardButton(
-                "➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ", url=f"https://t.me/{app.me.username}?startgroup=true"
+                "➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ",
+                url=f"https://t.me/{app.me.username}?startgroup=true",
+                style="primary",      # blue
             )
         ],
         [
-            InlineKeyboardButton("🤝 Sᴜᴘᴘᴏʀᴛ", url=config.SUPPORT_CHAT_LINK),
-            InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", user_id=config.OWNER_ID)
+            InlineKeyboardButton(
+                "🤝 Sᴜᴘᴘᴏʀᴛ",
+                url=config.SUPPORT_CHAT_LINK,
+                style="success",      # green
+            ),
+            InlineKeyboardButton(
+                "👤 ᴏᴡɴᴇʀ",
+                user_id=config.OWNER_ID,
+                style="primary",      # blue (or success, as you prefer)
+            )
         ],
         [
-            InlineKeyboardButton(" ʜᴇʟᴘ ", callback_data="yumeko_help")
+            InlineKeyboardButton(
+                " ʜᴇʟᴘ ",
+                callback_data="yumeko_help",
+                style="danger",       # red
+            )
         ]
     ]
     return InlineKeyboardMarkup(buttons)
