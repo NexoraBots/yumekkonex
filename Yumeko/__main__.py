@@ -141,30 +141,27 @@ def get_main_menu_buttons():
             InlineKeyboardButton(
                 "➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ",
                 url=f"https://t.me/{app.me.username}?startgroup=true",
-                style="primary",      # blue
             )
         ],
         [
             InlineKeyboardButton(
                 "🤝 Sᴜᴘᴘᴏʀᴛ",
                 url=config.SUPPORT_CHAT_LINK,
-                style="success",      # green
             ),
             InlineKeyboardButton(
                 "👤 ᴏᴡɴᴇʀ",
                 user_id=config.OWNER_ID,
-                style="primary",      # blue (or success, as you prefer)
             )
         ],
         [
             InlineKeyboardButton(
                 " ʜᴇʟᴘ ",
                 callback_data="yumeko_help",
-                style="danger",       # red
             )
         ]
     ]
     return InlineKeyboardMarkup(buttons)
+
 
 @app.on_message(filters.command("start", config.COMMAND_PREFIXES) & filters.private)
 @error
